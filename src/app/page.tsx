@@ -276,15 +276,33 @@ const CitationTooltip = ({
 // Sources Collapsible Component
 const SourcesCollapsible = ({ sources }: { sources: Source[] }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isOpen && contentRef.current) {
+      setTimeout(() => {
+        const scrollContainer = contentRef.current?.closest('[data-radix-scroll-area-viewport]');
+        if (scrollContainer) {
+          scrollContainer.scrollBy({ 
+            top: 60,
+            behavior: "auto"
+          });
+        }
+      }, 150);
+    }
+  }, [isOpen]);
 
   return (
     <div className="px-2">
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
-          <ChevronRight className={cn("h-3 w-3 transition-transform", isOpen && "rotate-90")} />
+        <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+          <ChevronRight className={cn("h-3 w-3 transition-transform duration-200", isOpen && "rotate-90")} />
           <span>Sources ({sources.length})</span>
         </CollapsibleTrigger>
-        <CollapsibleContent className="mt-2 space-y-1">
+        <CollapsibleContent 
+          ref={contentRef}
+          className="mt-2 space-y-1 animate-in slide-in-from-top-1 duration-200"
+        >
           {sources.map((source) => (
             <a
               key={source.id}
