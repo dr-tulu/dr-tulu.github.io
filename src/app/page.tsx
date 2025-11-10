@@ -302,6 +302,168 @@ const SourcesCollapsible = ({ sources }: { sources: Source[] }) => {
   );
 };
 
+// Parse full traces into structured sections
+type TraceSection = {
+  type: "text" | "tool_call" | "tool_output";
+  content: string;
+  toolName?: string;
+  toolParams?: Record<string, string>;
+};
+
+const parseFullTraces = (generatedText: string): TraceSection[] => {
+  const sections: TraceSection[] = [];
+  const toolCallRegex = /<call_tool name="([^"]+)"([^>]*)>([\s\S]*?)<\/call_tool>/g;
+  const toolOutputRegex = /<tool_output>([\s\S]*?)<\/tool_output>/g;
+  
+  let lastIndex = 0;
+  const matches: Array<{type: "call" | "output", index: number, endIndex: number, content: string, name?: string, params?: Record<string, string>}> = [];
+  
+  // Find all tool calls
+  let match;
+  while ((match = toolCallRegex.exec(generatedText)) !== null) {
+    const toolName = match[1];
+    const paramsString = match[2];
+    const content = match[3];
+    
+    // Parse parameters
+    const params: Record<string, string> = {};
+    const paramRegex = /(\w+)="([^"]*)"/g;
+    let paramMatch;
+    while ((paramMatch = paramRegex.exec(paramsString)) !== null) {
+      params[paramMatch[1]] = paramMatch[2];
+    }
+    
+    matches.push({
+      type: "call",
+      index: match.index,
+      endIndex: match.index + match[0].length,
+      content,
+      name: toolName,
+      params
+    });
+  }
+  
+  // Find all tool outputs
+  toolOutputRegex.lastIndex = 0;
+  while ((match = toolOutputRegex.exec(generatedText)) !== null) {
+    matches.push({
+      type: "output",
+      index: match.index,
+      endIndex: match.index + match[0].length,
+      content: match[1]
+    });
+  }
+  
+  // Sort matches by index
+  matches.sort((a, b) => a.index - b.index);
+  
+  // Build sections
+  matches.forEach((match) => {
+    // Add text before this match
+    if (match.index > lastIndex) {
+      const textContent = generatedText.slice(lastIndex, match.index).trim();
+      if (textContent) {
+        sections.push({
+          type: "text",
+          content: textContent
+        });
+      }
+    }
+    
+    // Add the match itself
+    if (match.type === "call") {
+      sections.push({
+        type: "tool_call",
+        content: match.content.trim(),
+        toolName: match.name,
+        toolParams: match.params
+      });
+    } else {
+      sections.push({
+        type: "tool_output",
+        content: match.content.trim()
+      });
+    }
+    
+    lastIndex = match.endIndex;
+  });
+  
+  // Add any remaining text
+  if (lastIndex < generatedText.length) {
+    const textContent = generatedText.slice(lastIndex).trim();
+    if (textContent) {
+      sections.push({
+        type: "text",
+        content: textContent
+      });
+    }
+  }
+  
+  return sections;
+};
+
+// Component to render a single trace section
+const TraceSection = ({ section, index }: { section: TraceSection; index: number }) => {
+  if (section.type === "text") {
+    return (
+      <div className="bg-background p-4 rounded-md border">
+        <div className="flex items-start gap-2 mb-2">
+          <span className="text-xs font-semibold text-muted-foreground">Thinking</span>
+        </div>
+        <p className="text-xs whitespace-pre-wrap font-mono leading-relaxed">
+          {section.content}
+        </p>
+      </div>
+    );
+  }
+  
+  if (section.type === "tool_call") {
+    return (
+      <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-md border border-blue-200 dark:border-blue-900">
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <div>
+            <span className="text-xs font-semibold text-blue-700 dark:text-blue-400">
+              Tool Call: {section.toolName}
+            </span>
+            {section.toolParams && Object.keys(section.toolParams).length > 0 && (
+              <div className="mt-1 space-y-0.5">
+                {Object.entries(section.toolParams).map(([key, value]) => (
+                  <div key={key} className="text-xs text-muted-foreground">
+                    <span className="font-medium">{key}:</span> {value}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <span className="text-xs text-muted-foreground bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 rounded">
+            #{index + 1}
+          </span>
+        </div>
+        <p className="text-xs whitespace-pre-wrap font-mono leading-relaxed text-muted-foreground mt-2">
+          {section.content}
+        </p>
+      </div>
+    );
+  }
+  
+  if (section.type === "tool_output") {
+    return (
+      <div className="bg-green-50 dark:bg-green-950/20 p-4 rounded-md border border-green-200 dark:border-green-900">
+        <div className="flex items-start gap-2 mb-2">
+          <span className="text-xs font-semibold text-green-700 dark:text-green-400">
+            Tool Output
+          </span>
+        </div>
+        <p className="text-xs whitespace-pre-wrap font-mono leading-relaxed text-muted-foreground max-h-48 overflow-y-auto">
+          {section.content}
+        </p>
+      </div>
+    );
+  }
+  
+  return null;
+};
+
 // Side Panel Component with Tabs
 const SidePanel = ({
   fullTraces,
@@ -313,6 +475,12 @@ const SidePanel = ({
   isOpen: boolean;
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [parsedTraces, setParsedTraces] = useState<TraceSection[]>([]);
+
+  useEffect(() => {
+    const sections = parseFullTraces(fullTraces.generated_text);
+    setParsedTraces(sections);
+  }, [fullTraces.generated_text]);
 
   const filteredDocuments = documents.filter((doc) => {
     const query = searchQuery.toLowerCase();
@@ -346,9 +514,11 @@ const SidePanel = ({
             </div>
           </div>
           <ScrollArea className="h-[calc(100%-3rem)] p-4">
-            <pre className="text-xs whitespace-pre-wrap font-mono bg-background p-4 rounded-md">
-              {fullTraces.generated_text}
-            </pre>
+            <div className="space-y-3">
+              {parsedTraces.map((section, index) => (
+                <TraceSection key={index} section={section} index={index} />
+              ))}
+            </div>
           </ScrollArea>
         </TabsContent>
 
