@@ -419,10 +419,10 @@ const TraceSection = ({ section, index }: { section: TraceSection; index: number
   
   if (section.type === "tool_call") {
     return (
-      <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-md border border-blue-200 dark:border-blue-900">
+      <div className="bg-blue-50 p-4 rounded-md border border-blue-200">
         <div className="flex items-start justify-between gap-2 mb-2">
           <div>
-            <span className="text-xs font-semibold text-blue-700 dark:text-blue-400">
+            <span className="text-xs font-semibold text-blue-700">
               Tool Call: {section.toolName}
             </span>
             {section.toolParams && Object.keys(section.toolParams).length > 0 && (
@@ -435,7 +435,7 @@ const TraceSection = ({ section, index }: { section: TraceSection; index: number
               </div>
             )}
           </div>
-          <span className="text-xs text-muted-foreground bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 rounded">
+          <span className="text-xs text-muted-foreground bg-blue-100 px-2 py-0.5 rounded">
             #{index + 1}
           </span>
         </div>
@@ -448,9 +448,9 @@ const TraceSection = ({ section, index }: { section: TraceSection; index: number
   
   if (section.type === "tool_output") {
     return (
-      <div className="bg-green-50 dark:bg-green-950/20 p-4 rounded-md border border-green-200 dark:border-green-900">
+      <div className="bg-green-50 p-4 rounded-md border border-green-200">
         <div className="flex items-start gap-2 mb-2">
-          <span className="text-xs font-semibold text-green-700 dark:text-green-400">
+          <span className="text-xs font-semibold text-green-700">
             Tool Output
           </span>
         </div>
