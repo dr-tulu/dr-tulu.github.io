@@ -22,13 +22,15 @@ import { cn } from "@/lib/utils";
 
 const TITLE = "Dr tulu: End-to-End Training for Long-Form Deep Research with Adaptive Rubrics";
 
+const BASE_PATH = '/dr-tulu';
+
 const AUTHORS = [
   {
     name: "Dr Tulu Authors",
     affiliation: "Ai2 and others",
     email: "dr.tulu@gmail.com",
     website: "https://rl-rag.github.io/dr-tulu",
-    avatar: "/images/logo.png",
+    avatar: `${BASE_PATH}/images/logo.png`,
   },
 ];
 
@@ -171,7 +173,7 @@ const ChatInterface = () => {
             >
               {message.role === "assistant" && (
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="/images/logo.png" alt="Dr. Tulu" />
+                  <AvatarImage src={`${BASE_PATH}/images/logo.png`} alt="Dr. Tulu" />
                   <AvatarFallback className="bg-primary text-primary-foreground">
                     DT
                   </AvatarFallback>
@@ -197,7 +199,7 @@ const ChatInterface = () => {
           {isLoading && (
             <div className="flex gap-3 justify-start">
               <Avatar className="h-8 w-8">
-                <AvatarImage src="/images/logo.png" alt="Dr. Tulu" />
+                <AvatarImage src={`${BASE_PATH}/images/logo.png`} alt="Dr. Tulu" />
                 <AvatarFallback className="bg-primary text-primary-foreground">
                   DT
                 </AvatarFallback>
