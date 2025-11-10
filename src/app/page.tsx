@@ -231,15 +231,15 @@ const CitationTooltip = ({
     <TooltipProvider>
       <Tooltip delayDuration={200}>
         <TooltipTrigger asChild>
-          <span className="text-blue-600 underline decoration-dotted cursor-help">
+          <span className="text-foreground underline decoration-blue-400 decoration-dotted cursor-help transition-colors duration-200 hover:text-blue-600">
             {text}
-            <sup className="ml-0.5 text-[10px] text-blue-400 font-normal opacity-70">
+            <sup className="ml-0.5 text-[10px] text-blue-500 font-medium">
               [{citationNumbers.join(", ")}]
             </sup>
           </span>
         </TooltipTrigger>
         <TooltipContent className="max-w-sm p-3" side="top">
-          <div className="space-y-2">
+        <div className="space-y-2">
             {sources.length > 0 ? (
               sources.map((source, index) => (
                 <div key={source.id} className="text-xs">
