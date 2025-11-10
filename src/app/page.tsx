@@ -968,7 +968,7 @@ export default function Home() {
                     <SelectItem value="example">Example 1: Feather Hydrolysate Research</SelectItem>
                   </SelectContent>
                 </Select>
-                <TooltipProvider>
+                {/* <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
@@ -988,7 +988,7 @@ export default function Home() {
                       {isPanelOpen ? "Hide side panel" : "Show side panel"}
                     </TooltipContent>
                   </Tooltip>
-                </TooltipProvider>
+                </TooltipProvider> */}
               </div>
             </div>
             <Separator className="mt-2" />
