@@ -102,9 +102,9 @@ const Headline = () => (
       <ArrowRightIcon className="ml-1 h-4 w-4" />
     </Link>
     <PageHeaderHeading className="tracking-tight">{TITLE}</PageHeaderHeading>
-    <PageHeaderDescription>
+    {/* <PageHeaderDescription>
       An advanced AI assistant for long-form deep research with adaptive evaluation rubrics.
-    </PageHeaderDescription>
+    </PageHeaderDescription> */}
     <Separator className="mb-0.25 mt-2" />
     <div className="flex flex-wrap justify-start items-start align-start space-x-4">
       {AUTHORS.map((author, index) => (
@@ -846,54 +846,93 @@ const ChatInterface = ({ selectedExample, isPanelOpen }: { selectedExample: stri
   );
 };
 
+const Footer = () => (
+  <footer className="mt-16 border-t bg-muted/20 px-8">
+    <div className="container py-6">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="text-sm text-muted-foreground">
+          © 2025 Dr. Tulu Authors. All rights reserved.
+        </div>
+        <div className="flex items-center gap-6">
+          <Link
+            href={PAPER_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Paper
+          </Link>
+          <Link
+            href="https://rl-rag.github.io/dr-tulu"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Project Page
+          </Link>
+          <Link
+            href="mailto:dr.tulu@gmail.com"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Contact
+          </Link>
+        </div>
+      </div>
+    </div>
+  </footer>
+);
+
 export default function Home() {
   const [selectedExample, setSelectedExample] = useState<string>("example");
   const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
 
   return (
-    <div className="container min-h-screen relative p-16">
-      <Headline />
-      <div className="mt-8 rounded-[0.5rem] border bg-background shadow overflow-hidden">
-        <div className="px-0 pt-6 pb-0">
-          <div className="mr-6 ml-8 flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Research Assistant Demo</h2>
-            <div className="flex items-center gap-3">
-              <label className="text-sm font-medium">Select Example:</label>
-              <Select value={selectedExample} onValueChange={setSelectedExample} disabled>
-                <SelectTrigger className="w-64">
-                  <SelectValue placeholder="Choose an example" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="example">Example 1: Feather Hydrolysate Research</SelectItem>
-                </SelectContent>
-              </Select>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setIsPanelOpen(!isPanelOpen)}
-                      className="h-8 w-8 transition-all hover:bg-muted"
-                    >
-                      {isPanelOpen ? (
-                        <PanelLeftClose className="h-4 w-4 transition-transform duration-200" />
-                      ) : (
-                        <PanelLeftOpen className="h-4 w-4 transition-transform duration-200" />
-                      )}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    {isPanelOpen ? "Hide side panel" : "Show side panel"}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+    <div className="min-h-screen flex flex-col">
+      <div className="container relative p-16 flex-1">
+        <Headline />
+        <div className="mt-8 rounded-[0.5rem] border bg-background shadow overflow-hidden">
+          <div className="px-0 pt-6 pb-0">
+            <div className="mr-6 ml-8 flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Dr. Tulu for Deep Research</h2>
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-medium">Select Example:</label>
+                <Select value={selectedExample} onValueChange={setSelectedExample} disabled>
+                  <SelectTrigger className="w-64">
+                    <SelectValue placeholder="Choose an example" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="example">Example 1: Feather Hydrolysate Research</SelectItem>
+                  </SelectContent>
+                </Select>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setIsPanelOpen(!isPanelOpen)}
+                        className="h-8 w-8 transition-all hover:bg-muted"
+                      >
+                        {isPanelOpen ? (
+                          <PanelLeftClose className="h-4 w-4 transition-transform duration-200" />
+                        ) : (
+                          <PanelLeftOpen className="h-4 w-4 transition-transform duration-200" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      {isPanelOpen ? "Hide side panel" : "Show side panel"}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
             </div>
+            <Separator className="mt-2" />
+            <ChatInterface selectedExample={selectedExample} isPanelOpen={isPanelOpen} />
           </div>
-          <Separator className="mt-2" />
-          <ChatInterface selectedExample={selectedExample} isPanelOpen={isPanelOpen} />
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
