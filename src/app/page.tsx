@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import React, { useState, useRef, useEffect } from "react";
-import { ArrowRightIcon, SendHorizontal, ChevronRight, ExternalLink, PanelLeftClose, PanelLeftOpen, Search } from "lucide-react";
+import { ArrowRightIcon, SendHorizontal, ChevronRight, ExternalLink, PanelLeftClose, PanelLeftOpen, Search, ArrowDownFromLine, ArrowUpFromLine } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -32,6 +32,11 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
 import { nanoid } from "nanoid";
 
 import {
@@ -422,59 +427,81 @@ const parseFullTraces = (generatedText: string): TraceSection[] => {
 
 // Component to render a single trace section
 const TraceSection = ({ section, index }: { section: TraceSection; index: number }) => {
+  const [isThinkingOpen, setIsThinkingOpen] = useState(false);
+  
   if (section.type === "text") {
     return (
-      <div className="bg-background p-4 rounded-md border">
-        <div className="flex items-start gap-2 mb-2">
-          <span className="text-xs font-semibold text-muted-foreground">Thinking</span>
-        </div>
-        <p className="text-xs whitespace-pre-wrap font-mono leading-relaxed">
-          {section.content}
-        </p>
+      <div className="bg-background rounded-md border overflow-hidden">
+        <Collapsible open={isThinkingOpen} onOpenChange={setIsThinkingOpen}>
+          <CollapsibleTrigger className="flex items-center justify-between p-4 w-full hover:bg-muted/50 transition-colors duration-200">
+            <span className="text-xs font-semibold text-muted-foreground">Thinking</span>
+            <div className={cn(
+              "transform transition-all duration-300 ease-in-out",
+              isThinkingOpen ? "rotate-0 scale-100" : "rotate-0 scale-100"
+            )}>
+              {isThinkingOpen ? (
+                <ArrowUpFromLine className="h-3.5 w-3.5 text-muted-foreground" />
+              ) : (
+                <ArrowDownFromLine className="h-3.5 w-3.5 text-muted-foreground" />
+              )}
+            </div>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-top-1 data-[state=open]:slide-in-from-top-1 duration-300">
+            <div className="px-4 pb-4 pt-1">
+              <p className="text-xs whitespace-pre-wrap font-mono leading-relaxed break-words">
+                {section.content}
+              </p>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
     );
   }
   
   if (section.type === "tool_call") {
     return (
-      <div className="bg-blue-50 p-4 rounded-md border border-blue-200">
+      <div className="bg-blue-50 p-4 rounded-md border border-blue-200 transition-all duration-200 hover:shadow-md hover:border-blue-300 hover:bg-blue-100 cursor-pointer overflow-hidden">
         <div className="flex items-start justify-between gap-2 mb-2">
-          <div>
+          <div className="flex-1 min-w-0">
             <span className="text-xs font-semibold text-blue-700">
               Tool Call: {section.toolName}
             </span>
             {section.toolParams && Object.keys(section.toolParams).length > 0 && (
               <div className="mt-1 space-y-0.5">
                 {Object.entries(section.toolParams).map(([key, value]) => (
-                  <div key={key} className="text-xs text-muted-foreground">
+                  <div key={key} className="text-xs text-muted-foreground break-all overflow-hidden">
                     <span className="font-medium">{key}:</span> {value}
                   </div>
                 ))}
               </div>
             )}
           </div>
-          <span className="text-xs text-muted-foreground bg-blue-100 px-2 py-0.5 rounded">
+          <span className="text-xs text-muted-foreground bg-blue-100 px-2 py-0.5 rounded flex-shrink-0">
             #{index + 1}
           </span>
         </div>
-        <p className="text-xs whitespace-pre-wrap font-mono leading-relaxed text-muted-foreground mt-2">
-          {section.content}
-        </p>
+        <div className="max-h-48 overflow-y-auto overflow-x-hidden">
+          <p className="text-xs whitespace-pre-wrap font-mono leading-relaxed text-muted-foreground mt-2 break-all overflow-hidden">
+            {section.content}
+          </p>
+        </div>
       </div>
     );
   }
   
   if (section.type === "tool_output") {
     return (
-      <div className="bg-green-50 p-4 rounded-md border border-green-200">
+      <div className="bg-green-50 p-4 rounded-md border border-green-200 overflow-hidden">
         <div className="flex items-start gap-2 mb-2">
           <span className="text-xs font-semibold text-green-700">
             Tool Output
           </span>
         </div>
-        <p className="text-xs whitespace-pre-wrap font-mono leading-relaxed text-muted-foreground max-h-48 overflow-y-auto">
-          {section.content}
-        </p>
+        <div className="max-h-48 overflow-y-auto overflow-x-hidden">
+          <p className="text-xs whitespace-pre-wrap font-mono leading-relaxed text-muted-foreground break-all overflow-hidden">
+            {section.content}
+          </p>
+        </div>
       </div>
     );
   }
@@ -486,11 +513,9 @@ const TraceSection = ({ section, index }: { section: TraceSection; index: number
 const SidePanel = ({
   fullTraces,
   documents,
-  isOpen,
 }: {
   fullTraces: FullTraces;
   documents: Document[];
-  isOpen: boolean;
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [parsedTraces, setParsedTraces] = useState<TraceSection[]>([]);
@@ -510,13 +535,8 @@ const SidePanel = ({
   });
 
   return (
-    <div
-      className={cn(
-        "border-l bg-muted/20 flex flex-col h-full transition-all duration-300 ease-in-out overflow-hidden",
-        isOpen ? "w-96 opacity-100" : "w-0 opacity-0"
-      )}
-    >
-      <Tabs defaultValue="traces" className="flex flex-col h-full min-w-96">
+    <div className="bg-muted/20 flex flex-col h-full overflow-hidden border-l ">
+      <Tabs defaultValue="traces" className="flex flex-col h-full">
         <div className="p-4 border-b bg-background">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="traces">Full Traces</TabsTrigger>
@@ -724,12 +744,13 @@ const convertExampleToMessages = (data: ExampleData): Message[] => {
   ];
 };
 
-const ChatInterface = ({ selectedExample, isPanelOpen }: { selectedExample: string; isPanelOpen: boolean }) => {
+const ChatInterface = ({ selectedExample, isPanelOpen, onPanelToggle }: { selectedExample: string; isPanelOpen: boolean; onPanelToggle: () => void }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const panelRef = useRef<any>(null);
 
   // Load example data on mount
   useEffect(() => {
@@ -744,6 +765,17 @@ const ChatInterface = ({ selectedExample, isPanelOpen }: { selectedExample: stri
     };
     loadData();
   }, [selectedExample]);
+
+  // Handle panel collapse/expand
+  useEffect(() => {
+    if (panelRef.current) {
+      if (isPanelOpen) {
+        panelRef.current.expand();
+      } else {
+        panelRef.current.collapse();
+      }
+    }
+  }, [isPanelOpen]);
 
   useEffect(() => {
     // Auto-scroll to bottom when new messages arrive
@@ -768,99 +800,113 @@ const ChatInterface = ({ selectedExample, isPanelOpen }: { selectedExample: stri
   };
 
   return (
-    <div className="flex h-[600px] gap-0 pl-0">
-      <div className="flex-1 flex flex-col">
-        <ScrollArea ref={scrollAreaRef} className="flex-1 p-4 pl-8">
-          <div className="space-y-4">
-            {isLoading ? (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-muted-foreground">Loading example...</div>
-              </div>
-            ) : (
-              messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={cn(
-                    "flex gap-3",
-                    message.role === "user" ? "justify-end" : "justify-start"
-                  )}
-                >
-                  {message.role === "assistant" && (
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={`${BASE_PATH}/images/logo.png`} alt="Dr. Tulu" />
-                      <AvatarFallback className="bg-primary text-primary-foreground">
-                        DT
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                  <div className="flex flex-col gap-2 max-w-[80%]">
-                    <div
-                      className={cn(
-                        "rounded-lg px-4 py-3",
-                        message.role === "user"
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted"
-                      )}
-                    >
-                      <div className="text-sm whitespace-pre-wrap leading-relaxed">
-                        {message.role === "assistant" && message.sources
-                          ? parseCitationsWithTooltips(message.content, message.sources)
-                          : message.content}
+    <ResizablePanelGroup direction="horizontal" className="h-[600px]">
+      <ResizablePanel defaultSize={65} minSize={30}>
+        <div className="flex flex-col h-[600px]">
+          <ScrollArea ref={scrollAreaRef} className="flex-1 p-4 pl-8">
+            <div className="space-y-4">
+              {isLoading ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-muted-foreground">Loading example...</div>
+                </div>
+              ) : (
+                messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={cn(
+                      "flex gap-3",
+                      message.role === "user" ? "justify-end" : "justify-start"
+                    )}
+                  >
+                    {message.role === "assistant" && (
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={`${BASE_PATH}/images/logo.png`} alt="Dr. Tulu" />
+                        <AvatarFallback className="bg-primary text-primary-foreground">
+                          DT
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                    <div className="flex flex-col gap-2 max-w-[80%]">
+                      <div
+                        className={cn(
+                          "rounded-lg px-4 py-3",
+                          message.role === "user"
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted"
+                        )}
+                      >
+                        <div className="text-sm whitespace-pre-wrap leading-relaxed">
+                          {message.role === "assistant" && message.sources
+                            ? parseCitationsWithTooltips(message.content, message.sources)
+                            : message.content}
+                        </div>
                       </div>
+                      {message.role === "assistant" && message.sources && message.sources.length > 0 && (
+                        <SourcesCollapsible sources={message.sources} />
+                      )}
                     </div>
-                    {message.role === "assistant" && message.sources && message.sources.length > 0 && (
-                      <SourcesCollapsible sources={message.sources} />
+                    {message.role === "user" && (
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback>U</AvatarFallback>
+                      </Avatar>
                     )}
                   </div>
-                  {message.role === "user" && (
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback>U</AvatarFallback>
-                    </Avatar>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        </ScrollArea>
+                ))
+              )}
+            </div>
+          </ScrollArea>
 
-        <form onSubmit={handleSubmit} className="p-4 pl-8 border-t bg-muted/10">
-          <div className="relative">
-            <Textarea
-              ref={textareaRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Chat functionality coming soon..."
-              className="min-h-[80px] max-h-[200px] resize-none pr-12 opacity-50"
-              disabled={true}
-            />
-            <Button
-              type="submit"
-              size="icon"
-              variant="ghost"
-              disabled={true}
-              className="absolute bottom-2 right-2 h-8 w-8 rounded-lg hover:bg-muted"
-            >
-              <SendHorizontal className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="flex pl-2 mt-2">
-            <p className="text-xs text-muted-foreground/60">
-              Interactive chat coming soon. Currently displaying example research output.
-            </p>
-          </div>
-        </form>
-      </div>
+          <form onSubmit={handleSubmit} className="p-4 pl-8 border-t bg-muted/10">
+            <div className="relative">
+              <Textarea
+                ref={textareaRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Chat functionality coming soon..."
+                className="min-h-[80px] max-h-[200px] resize-none pr-12 opacity-50"
+                disabled={true}
+              />
+              <Button
+                type="submit"
+                size="icon"
+                variant="ghost"
+                disabled={true}
+                className="absolute bottom-2 right-2 h-8 w-8 rounded-lg hover:bg-muted"
+              >
+                <SendHorizontal className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex pl-2 mt-2">
+              <p className="text-xs text-muted-foreground/60">
+                Interactive chat coming soon. Currently displaying example research output.
+              </p>
+            </div>
+          </form>
+        </div>
+      </ResizablePanel>
 
       {/* Side Panel for Full Traces and Documents */}
       {messages.length > 0 && messages[1]?.fullTraces && (
-        <SidePanel
-          fullTraces={messages[1].fullTraces}
-          documents={messages[1].documents || []}
-          isOpen={isPanelOpen}
-        />
+        <>
+          <ResizableHandle withHandle className="w-0" />
+          <ResizablePanel 
+            ref={panelRef}
+            defaultSize={35} 
+            minSize={20}
+            maxSize={60}
+            collapsible
+            collapsedSize={0}
+            className="h-[600px]"
+          >
+            <SidePanel
+              fullTraces={messages[1].fullTraces}
+              documents={messages[1].documents || []}
+            />
+          </ResizablePanel>
+        </>
       )}
-    </div>
+    </ResizablePanelGroup>
   );
 };
 
@@ -946,7 +992,11 @@ export default function Home() {
               </div>
             </div>
             <Separator className="mt-2" />
-            <ChatInterface selectedExample={selectedExample} isPanelOpen={isPanelOpen} />
+            <ChatInterface 
+              selectedExample={selectedExample} 
+              isPanelOpen={isPanelOpen} 
+              onPanelToggle={() => setIsPanelOpen(!isPanelOpen)}
+            />
           </div>
         </div>
       </div>
