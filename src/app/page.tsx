@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import React, { useState, useRef, useEffect } from "react";
 import { ArrowRightIcon, SendHorizontal, ChevronRight, ExternalLink, PanelLeftClose, PanelLeftOpen, Search, ArrowDownFromLine, ArrowUpFromLine } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -953,9 +954,63 @@ const Footer = () => (
   </footer>
 );
 
+const MobileView = () => (
+  <div className="min-h-screen flex flex-col">
+    <div className="container relative p-4">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold tracking-tight mb-2">{TITLE}</h1>
+        <p className="text-sm text-muted-foreground mb-4">
+          For the best experience, please visit this demo on a desktop or tablet device.
+        </p>
+      </div>
+      <div className="rounded-lg border bg-background shadow-lg overflow-hidden">
+        <Image 
+          src={`${BASE_PATH}/images/demo.png`}
+          alt="Dr. Tulu Demo Screenshot"
+          width={1200}
+          height={800}
+          className="w-full h-auto"
+          priority
+        />
+      </div>
+      <div className="mt-6 mb-6 text-center">
+        <Link
+          href={PAPER_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(
+            buttonVariants({ variant: "default" }),
+            "inline-flex items-center gap-2"
+          )}
+        >
+          Read Our Paper
+          <ExternalLink className="h-4 w-4" />
+        </Link>
+      </div>
+    </div>
+    <Footer />
+  </div>
+);
+
 export default function Home() {
   const [selectedExample, setSelectedExample] = useState<string>("example");
   const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  if (isMobile) {
+    return <MobileView />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
