@@ -751,6 +751,7 @@ const ChatInterface = ({ selectedExample, isPanelOpen, onPanelToggle }: { select
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const panelRef = useRef<any>(null);
+  const isInitialLoadRef = useRef<boolean>(true);
 
   // Load example data on mount
   useEffect(() => {
@@ -778,8 +779,14 @@ const ChatInterface = ({ selectedExample, isPanelOpen, onPanelToggle }: { select
   }, [isPanelOpen]);
 
   useEffect(() => {
-    // Auto-scroll to bottom when new messages arrive
-    if (scrollAreaRef.current) {
+    // Skip auto-scroll on initial load, only auto-scroll when new messages are added
+    if (isInitialLoadRef.current && messages.length > 0) {
+      isInitialLoadRef.current = false;
+      return;
+    }
+    
+    // Auto-scroll to bottom when new messages arrive (but not on initial load)
+    if (scrollAreaRef.current && !isInitialLoadRef.current) {
       const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
       if (scrollContainer) {
         scrollContainer.scrollTop = scrollContainer.scrollHeight;
