@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import React, { useState, useRef, useEffect } from "react";
-import { ArrowRightIcon, SendHorizontal, ChevronRight, ExternalLink, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { ArrowRightIcon, SendHorizontal, ChevronRight, ExternalLink, PanelLeftClose, PanelLeftOpen, Search } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -10,8 +10,10 @@ import {
   HoverCardContent,
 } from "@/components/ui/hover-card";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Tooltip,
   TooltipContent,
@@ -125,6 +127,15 @@ type FullTraces = {
   tool_call_count: number;
 };
 
+type Document = {
+  id: string;
+  title: string;
+  url: string;
+  snippet: string;
+  tool_call_id: string;
+  tool_name: string;
+};
+
 type Message = {
   id: string;
   role: "user" | "assistant";
@@ -132,6 +143,7 @@ type Message = {
   timestamp: Date;
   sources?: Source[];
   fullTraces?: FullTraces;
+  documents?: Document[];
 };
 
 type ExampleData = {
@@ -165,6 +177,12 @@ const parseCitationsWithTooltips = (
   let lastIndex = 0;
   let match;
 
+  // Create a mapping from source IDs to citation numbers
+  const sourceIdToNumber = new Map<string, number>();
+  sources.forEach((source, index) => {
+    sourceIdToNumber.set(source.id, index + 1);
+  });
+
   while ((match = regex.exec(text)) !== null) {
     // Add text before the citation
     if (match.index > lastIndex) {
@@ -174,6 +192,9 @@ const parseCitationsWithTooltips = (
     const citationIds = match[1].split(",");
     const citedText = match[2];
     const citedSources = sources.filter((s) => citationIds.includes(s.id));
+    const citationNumbers = citationIds
+      .map(id => sourceIdToNumber.get(id.trim()))
+      .filter(num => num !== undefined) as number[];
 
     // Create citation with tooltip
     parts.push(
@@ -181,6 +202,7 @@ const parseCitationsWithTooltips = (
         key={`cite-${match.index}`}
         sources={citedSources}
         text={citedText}
+        citationNumbers={citationNumbers}
       />
     );
 
@@ -199,9 +221,11 @@ const parseCitationsWithTooltips = (
 const CitationTooltip = ({
   sources,
   text,
+  citationNumbers,
 }: {
   sources: Source[];
   text: string;
+  citationNumbers: number[];
 }) => {
   return (
     <TooltipProvider>
@@ -209,14 +233,19 @@ const CitationTooltip = ({
         <TooltipTrigger asChild>
           <span className="text-blue-600 underline decoration-dotted cursor-help">
             {text}
+            <sup className="ml-0.5 text-[10px] text-blue-400 font-normal opacity-70">
+              [{citationNumbers.join(", ")}]
+            </sup>
           </span>
         </TooltipTrigger>
         <TooltipContent className="max-w-sm p-3" side="top">
           <div className="space-y-2">
             {sources.length > 0 ? (
-              sources.map((source) => (
+              sources.map((source, index) => (
                 <div key={source.id} className="text-xs">
-                  <div className="font-semibold">{source.title}</div>
+                  <div className="font-semibold">
+                    [{citationNumbers[index]}] {source.title}
+                  </div>
                   {source.snippet && (
                     <div className="text-muted-foreground mt-1 line-clamp-2">
                       {source.snippet}
@@ -273,14 +302,27 @@ const SourcesCollapsible = ({ sources }: { sources: Source[] }) => {
   );
 };
 
-// Full Traces Panel Component
-const FullTracesPanel = ({
+// Side Panel Component with Tabs
+const SidePanel = ({
   fullTraces,
+  documents,
   isOpen,
 }: {
   fullTraces: FullTraces;
+  documents: Document[];
   isOpen: boolean;
 }) => {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredDocuments = documents.filter((doc) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      doc.title.toLowerCase().includes(query) ||
+      doc.snippet.toLowerCase().includes(query) ||
+      doc.url.toLowerCase().includes(query)
+    );
+  });
+
   return (
     <div
       className={cn(
@@ -288,18 +330,88 @@ const FullTracesPanel = ({
         isOpen ? "w-96 opacity-100" : "w-0 opacity-0"
       )}
     >
-      <div className="p-4 border-b bg-background min-w-96">
-        <h3 className="font-semibold text-sm">Full Traces</h3>
-        <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
-          <span>Tokens: {fullTraces.total_tokens.toLocaleString()}</span>
-          <span>Tool Calls: {fullTraces.tool_call_count}</span>
+      <Tabs defaultValue="traces" className="flex flex-col h-full min-w-96">
+        <div className="p-4 border-b bg-background">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="traces">Full Traces</TabsTrigger>
+            <TabsTrigger value="documents">Documents</TabsTrigger>
+          </TabsList>
         </div>
-      </div>
-      <ScrollArea className="flex-1 p-4 min-w-96">
-        <pre className="text-xs whitespace-pre-wrap font-mono bg-background p-4 rounded-md">
-          {fullTraces.generated_text}
-        </pre>
-      </ScrollArea>
+
+        <TabsContent value="traces" className="flex-1 overflow-hidden mt-0">
+          <div className="p-4 border-b bg-background">
+            <div className="flex gap-4 text-xs text-muted-foreground">
+              <span>Tokens: {fullTraces.total_tokens.toLocaleString()}</span>
+              <span>Tool Calls: {fullTraces.tool_call_count}</span>
+            </div>
+          </div>
+          <ScrollArea className="h-[calc(100%-3rem)] p-4">
+            <pre className="text-xs whitespace-pre-wrap font-mono bg-background p-4 rounded-md">
+              {fullTraces.generated_text}
+            </pre>
+          </ScrollArea>
+        </TabsContent>
+
+        <TabsContent value="documents" className="flex-1 overflow-hidden mt-0">
+          <div className="p-4 border-b bg-background">
+            <div className="relative flex items-center">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search documents..."
+                value={searchQuery}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                className="pl-8 pr-32 h-9 text-xs"
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
+                {searchQuery ? (
+                  <span>Showing {filteredDocuments.length} of {documents.length} result{documents.length !== 1 ? "s" : ""}</span>
+                ) : (
+                  <span>{documents.length} retrieved</span>
+                )}
+              </div>
+            </div>
+          </div>
+          <ScrollArea className="h-[calc(100%-5rem)] p-4">
+            <div className="space-y-4">
+              {filteredDocuments.length > 0 ? (
+                filteredDocuments.map((doc, index) => (
+                  <div
+                    key={`${doc.tool_call_id}-${doc.id}`}
+                    className="bg-background p-4 rounded-md border"
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <h4 className="font-semibold text-sm flex-1">{doc.title}</h4>
+                      <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                        #{documents.indexOf(doc) + 1}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      {doc.snippet}
+                    </p>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs text-muted-foreground">
+                        {doc.tool_name}
+                      </span>
+                      <a
+                        href={doc.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-500 hover:text-blue-700 inline-flex items-center gap-1"
+                      >
+                        View <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center text-sm text-muted-foreground py-8">
+                  No documents found matching &quot;{searchQuery}&quot;
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
@@ -365,9 +477,41 @@ const extractSources = (data: ExampleData): Source[] => {
   return sources;
 };
 
+// Extract documents from tool calls - only include cited documents
+const extractDocuments = (data: ExampleData): Document[] => {
+  const citedIds = getCitedSnippetIds(data.final_response);
+  const documents: Document[] = [];
+  
+  if (data.full_traces.tool_calls) {
+    data.full_traces.tool_calls.forEach((toolCall) => {
+      if (toolCall.documents) {
+        toolCall.documents.forEach((doc, index) => {
+          // Create snippet ID in the format: call_id-index (e.g., "fb888718-0")
+          const snippetId = `${toolCall.call_id}-${index}`;
+          
+          // Only include documents that are actually cited in the response
+          if (citedIds.has(snippetId)) {
+            documents.push({
+              id: snippetId,
+              title: doc.title,
+              url: doc.url,
+              snippet: doc.snippet,
+              tool_call_id: toolCall.call_id,
+              tool_name: toolCall.tool_name,
+            });
+          }
+        });
+      }
+    });
+  }
+  
+  return documents;
+};
+
 // Convert example data to messages
 const convertExampleToMessages = (data: ExampleData): Message[] => {
   const sources = extractSources(data);
+  const documents = extractDocuments(data);
 
   return [
     {
@@ -382,6 +526,7 @@ const convertExampleToMessages = (data: ExampleData): Message[] => {
       content: data.final_response,
       timestamp: new Date(),
       sources,
+      documents,
       fullTraces: {
         generated_text: data.full_traces.generated_text,
         total_tokens: data.full_traces.total_tokens,
@@ -519,10 +664,11 @@ const ChatInterface = ({ selectedExample, isPanelOpen }: { selectedExample: stri
         </form>
       </div>
 
-      {/* Side Panel for Full Traces */}
+      {/* Side Panel for Full Traces and Documents */}
       {messages.length > 0 && messages[1]?.fullTraces && (
-        <FullTracesPanel
+        <SidePanel
           fullTraces={messages[1].fullTraces}
+          documents={messages[1].documents || []}
           isOpen={isPanelOpen}
         />
       )}
@@ -568,7 +714,7 @@ export default function Home() {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
-                    {isPanelOpen ? "Hide full traces" : "Show full traces"}
+                    {isPanelOpen ? "Hide side panel" : "Show side panel"}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
