@@ -307,19 +307,22 @@ const SourcesCollapsible = ({ sources }: { sources: Source[] }) => {
         </CollapsibleTrigger>
         <CollapsibleContent 
           ref={contentRef}
-          className="mt-2 space-y-1 animate-in slide-in-from-top-1 duration-200"
+          className="mt-2 animate-in slide-in-from-top-1 duration-200"
         >
-          {sources.map((source) => (
-            <a
-              key={source.id}
-              href={source.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block text-xs text-blue-600 hover:text-blue-800 hover:underline"
-            >
-              • {source.title}
-            </a>
-          ))}
+          <ol className="list-decimal list-inside space-y-1 text-xs">
+            {sources.map((source) => (
+              <li key={source.id} className="text-muted-foreground">
+                <a
+                  href={source.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 hover:underline"
+                >
+                  {source.title}
+                </a>
+              </li>
+            ))}
+          </ol>
         </CollapsibleContent>
       </Collapsible>
     </div>
@@ -514,9 +517,11 @@ const TraceSection = ({ section, index }: { section: TraceSection; index: number
 const SidePanel = ({
   fullTraces,
   documents,
+  sources,
 }: {
   fullTraces: FullTraces;
   documents: Document[];
+  sources: Source[];
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [parsedTraces, setParsedTraces] = useState<TraceSection[]>([]);
@@ -526,14 +531,26 @@ const SidePanel = ({
     setParsedTraces(sections);
   }, [fullTraces.generated_text]);
 
-  const filteredDocuments = documents.filter((doc) => {
-    const query = searchQuery.toLowerCase();
-    return (
-      doc.title.toLowerCase().includes(query) ||
-      doc.snippet.toLowerCase().includes(query) ||
-      doc.url.toLowerCase().includes(query)
-    );
+  // Create mapping from document ID to citation number
+  const docIdToCitationNumber = new Map<string, number>();
+  sources.forEach((source, index) => {
+    docIdToCitationNumber.set(source.id, index + 1);
   });
+
+  const filteredDocuments = documents
+    .filter((doc) => {
+      const query = searchQuery.toLowerCase();
+      return (
+        doc.title.toLowerCase().includes(query) ||
+        doc.snippet.toLowerCase().includes(query) ||
+        doc.url.toLowerCase().includes(query)
+      );
+    })
+    .sort((a, b) => {
+      const numA = docIdToCitationNumber.get(a.id) || 999;
+      const numB = docIdToCitationNumber.get(b.id) || 999;
+      return numA - numB;
+    });
 
   return (
     <div className="bg-muted/20 flex flex-col h-full overflow-hidden border-l ">
@@ -591,7 +608,7 @@ const SidePanel = ({
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <h4 className="font-semibold text-sm flex-1">{doc.title}</h4>
                       <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                        #{documents.indexOf(doc) + 1}
+                        #{docIdToCitationNumber.get(doc.id) || documents.indexOf(doc) + 1}
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground mb-2">
@@ -910,6 +927,7 @@ const ChatInterface = ({ selectedExample, isPanelOpen, onPanelToggle }: { select
             <SidePanel
               fullTraces={messages[1].fullTraces}
               documents={messages[1].documents || []}
+              sources={messages[1].sources || []}
             />
           </ResizablePanel>
         </>
@@ -919,8 +937,8 @@ const ChatInterface = ({ selectedExample, isPanelOpen, onPanelToggle }: { select
 };
 
 const Footer = () => (
-  <footer className="mt-16 border-t bg-muted/20 px-8">
-    <div className="container py-6">
+  <footer className="mt-16 border-t bg-muted/20">
+    <div className="container py-6 px-16">
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="text-sm text-muted-foreground">
           © 2025 Dr. Tulu Authors. All rights reserved.
