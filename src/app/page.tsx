@@ -480,9 +480,9 @@ const TraceSection = ({ section, index }: { section: TraceSection; index: number
               </div>
             )}
           </div>
-          <span className="text-xs text-muted-foreground bg-blue-100 px-2 py-0.5 rounded flex-shrink-0">
+          {/* <span className="text-xs text-muted-foreground bg-blue-100 px-2 py-0.5 rounded flex-shrink-0">
             #{index + 1}
-          </span>
+          </span> */}
         </div>
         <div className="max-h-48 overflow-y-auto overflow-x-hidden">
           <p className="text-xs whitespace-pre-wrap font-mono leading-relaxed text-muted-foreground mt-2 break-all overflow-hidden">
@@ -495,7 +495,7 @@ const TraceSection = ({ section, index }: { section: TraceSection; index: number
   
   if (section.type === "tool_output") {
     return (
-      <div className="bg-green-50 p-4 rounded-md border border-green-200 overflow-hidden">
+      <div className="bg-green-50 p-4 rounded-md border border-green-200 transition-all duration-200 hover:shadow-md hover:border-green-300 hover:bg-green-100 cursor-pointer overflow-hidden">
         <div className="flex items-start gap-2 mb-2">
           <span className="text-xs font-semibold text-green-700">
             Tool Output
@@ -556,13 +556,26 @@ const SidePanel = ({
     <div className="bg-muted/20 flex flex-col h-full overflow-hidden border-l ">
       <Tabs defaultValue="traces" className="flex flex-col h-full">
         <div className="p-4 border-b bg-background">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="traces">Full Traces</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 transition-all">
+            <TabsTrigger 
+              value="traces"
+              className="transition-all duration-300 data-[state=active]:scale-[1.02]"
+            >
+              Full Traces
+            </TabsTrigger>
+            <TabsTrigger 
+              value="documents"
+              className="transition-all duration-300 data-[state=active]:scale-[1.02]"
+            >
+              Documents
+            </TabsTrigger>
           </TabsList>
         </div>
 
-        <TabsContent value="traces" className="flex-1 overflow-hidden mt-0">
+        <TabsContent 
+          value="traces" 
+          className="flex-1 overflow-hidden mt-0 data-[state=active]:animate-in data-[state=inactive]:animate-out data-[state=inactive]:fade-out-0 data-[state=active]:fade-in-0 data-[state=inactive]:slide-out-to-left-2 data-[state=active]:slide-in-from-right-2 duration-300"
+        >
           <div className="p-4 border-b bg-background">
             <div className="flex gap-4 text-xs text-muted-foreground">
               <span>Tokens: {fullTraces.total_tokens.toLocaleString()}</span>
@@ -603,7 +616,7 @@ const SidePanel = ({
                 filteredDocuments.map((doc, index) => (
                   <div
                     key={`${doc.tool_call_id}-${doc.id}`}
-                    className="bg-background p-4 rounded-md border"
+                    className="bg-background p-4 rounded-md border transition-all duration-200 hover:shadow-md hover:border-primary/30 hover:bg-muted/30 cursor-pointer"
                   >
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <h4 className="font-semibold text-sm flex-1">{doc.title}</h4>
