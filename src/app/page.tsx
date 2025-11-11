@@ -434,6 +434,7 @@ const TraceSection = ({ section, index }: { section: TraceSection; index: number
   const [isThinkingOpen, setIsThinkingOpen] = useState(false);
   
   if (section.type === "text") {
+    const contentWithoutThinkTags = section.content.replace(/<\/?think>/g, '').trim();
     return (
       <div className="bg-background rounded-md border overflow-hidden">
         <Collapsible open={isThinkingOpen} onOpenChange={setIsThinkingOpen}>
@@ -453,7 +454,7 @@ const TraceSection = ({ section, index }: { section: TraceSection; index: number
           <CollapsibleContent className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-top-1 data-[state=open]:slide-in-from-top-1 duration-300">
             <div className="px-4 pb-4 pt-1">
               <p className="text-xs whitespace-pre-wrap font-mono leading-relaxed break-words">
-                {section.content}
+                {contentWithoutThinkTags}
               </p>
             </div>
           </CollapsibleContent>
@@ -464,8 +465,8 @@ const TraceSection = ({ section, index }: { section: TraceSection; index: number
   
   if (section.type === "tool_call") {
     return (
-      <div className="bg-blue-50 p-4 rounded-md border border-blue-200 transition-all duration-200 hover:shadow-md hover:border-blue-300 hover:bg-blue-100 cursor-pointer overflow-hidden">
-        <div className="flex items-start justify-between gap-2 mb-2">
+      <div className="bg-blue-50 p-4 rounded-md border border-blue-200 transition-all duration-200 hover:shadow-md hover:border-blue-300 hover:bg-blue-100 cursor-pointer">
+        <div className="flex items-start justify-between gap-2 mb-2 min-w-0">
           <div className="flex-1 min-w-0">
             <span className="text-xs font-semibold text-blue-700">
               Tool Call: {section.toolName}
@@ -473,7 +474,7 @@ const TraceSection = ({ section, index }: { section: TraceSection; index: number
             {section.toolParams && Object.keys(section.toolParams).length > 0 && (
               <div className="mt-1 space-y-0.5">
                 {Object.entries(section.toolParams).map(([key, value]) => (
-                  <div key={key} className="text-xs text-muted-foreground break-all overflow-hidden">
+                  <div key={key} className="text-xs text-muted-foreground break-words min-w-0">
                     <span className="font-medium">{key}:</span> {value}
                   </div>
                 ))}
@@ -484,8 +485,8 @@ const TraceSection = ({ section, index }: { section: TraceSection; index: number
             #{index + 1}
           </span> */}
         </div>
-        <div className="max-h-48 overflow-y-auto overflow-x-hidden">
-          <p className="text-xs whitespace-pre-wrap font-mono leading-relaxed text-muted-foreground mt-2 break-all overflow-hidden">
+        <div className="max-h-48 overflow-y-auto overflow-x-hidden min-w-0">
+          <p className="text-xs whitespace-pre-wrap font-mono leading-relaxed text-muted-foreground mt-2 break-words min-w-0 max-w-full" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
             {section.content}
           </p>
         </div>
@@ -495,14 +496,14 @@ const TraceSection = ({ section, index }: { section: TraceSection; index: number
   
   if (section.type === "tool_output") {
     return (
-      <div className="bg-green-50 p-4 rounded-md border border-green-200 transition-all duration-200 hover:shadow-md hover:border-green-300 hover:bg-green-100 cursor-pointer overflow-hidden">
-        <div className="flex items-start gap-2 mb-2">
+      <div className="bg-green-50 p-4 rounded-md border border-green-200 transition-all duration-200 hover:shadow-md hover:border-green-300 hover:bg-green-100 cursor-pointer">
+        <div className="flex items-start gap-2 mb-2 min-w-0">
           <span className="text-xs font-semibold text-green-700">
             Tool Output
           </span>
         </div>
-        <div className="max-h-48 overflow-y-auto overflow-x-hidden">
-          <p className="text-xs whitespace-pre-wrap font-mono leading-relaxed text-muted-foreground break-all overflow-hidden">
+        <div className="max-h-48 overflow-y-auto overflow-x-hidden min-w-0">
+          <p className="text-xs whitespace-pre-wrap font-mono leading-relaxed text-muted-foreground break-words min-w-0 max-w-full" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
             {section.content}
           </p>
         </div>
