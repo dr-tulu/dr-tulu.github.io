@@ -6,8 +6,8 @@ import { Inter as FontSans } from "next/font/google";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Dr. Tulu - End-to-End Training for Long-Form Deep Research",
-  description: "An advanced AI assistant for long-form deep research with adaptive evaluation rubrics",
+  title: "DR Tulu: End-to-End Training for Long-Form Deep Research",
+  description: "An AI assistant for long-form deep research with adaptive rubrics",
 };
 
 const fontSans = FontSans({
