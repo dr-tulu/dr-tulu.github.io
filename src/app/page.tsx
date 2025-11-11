@@ -47,7 +47,7 @@ import {
 } from "./components/page-header";
 import { cn } from "@/lib/utils";
 
-const TITLE = "Dr tulu: End-to-End Training for Long-Form Deep Research with Adaptive Rubrics";
+const TITLE = "DR Tulu: End-to-End Training for Long-Form Deep Research with Adaptive Rubrics";
 
 const BASE_PATH = '/dr-tulu';
 
@@ -858,7 +858,7 @@ const ChatInterface = ({ selectedExample, isPanelOpen, onPanelToggle }: { select
                   >
                     {message.role === "assistant" && (
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={`${BASE_PATH}/images/logo.png`} alt="Dr. Tulu" />
+                        <AvatarImage src={`${BASE_PATH}/images/logo.png`} alt="DR Tulu" />
                         <AvatarFallback className="bg-primary text-primary-foreground">
                           DT
                         </AvatarFallback>
@@ -954,7 +954,7 @@ const Footer = () => (
     <div className="container py-6 px-16">
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="text-sm text-muted-foreground">
-          © 2025 Dr. Tulu Authors. All rights reserved.
+          © 2025 DR Tulu Authors. All rights reserved.
         </div>
         <div className="flex items-center gap-6">
           <Link
@@ -997,7 +997,7 @@ const MobileView = () => (
       <div className="rounded-lg border bg-background shadow-lg overflow-hidden">
         <Image 
           src={`${BASE_PATH}/images/demo.png`}
-          alt="Dr. Tulu Demo Screenshot"
+          alt="DR Tulu Demo Screenshot"
           width={1200}
           height={800}
           className="w-full h-auto"
@@ -1050,7 +1050,7 @@ export default function Home() {
         <div className="mt-8 rounded-[0.5rem] border bg-background shadow overflow-hidden">
           <div className="px-0 pt-6 pb-0">
             <div className="mr-6 ml-8 flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Dr. Tulu for Deep Research</h2>
+              <h2 className="text-lg font-semibold">DR Tulu for Deep Research</h2>
               <div className="flex items-center gap-3">
                 <label className="text-sm font-medium">Select Example:</label>
                 <Select value={selectedExample} onValueChange={setSelectedExample} disabled>
