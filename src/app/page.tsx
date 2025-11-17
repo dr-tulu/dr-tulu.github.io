@@ -49,14 +49,14 @@ import { cn } from "@/lib/utils";
 
 const TITLE = "DR Tulu: End-to-End Training for Long-Form Deep Research with Adaptive Rubrics";
 
-const BASE_PATH = '/dr-tulu';
+const BASE_PATH = '/';
 
 const AUTHORS = [
   {
     name: "Dr Tulu Authors",
     affiliation: "Ai2 and others",
     email: "dr.tulu@gmail.com",
-    website: "https://rl-rag.github.io/dr-tulu",
+    website: "https://dr-tulu.github.io/",
     avatar: `${BASE_PATH}/images/logo.png`,
   },
 ];
@@ -658,7 +658,7 @@ const SidePanel = ({
 
 // Load example JSON
 const loadExampleData = async (): Promise<ExampleData | null> => {
-  const response = await fetch("/dr-tulu/example.json");
+  const response = await fetch("/example.json");
   if (!response.ok) {
     console.error("Failed to load example.json");
     return null;
