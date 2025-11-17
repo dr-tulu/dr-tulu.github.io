@@ -49,7 +49,7 @@ import { cn } from "@/lib/utils";
 
 const TITLE = "DR Tulu: End-to-End Training for Long-Form Deep Research with Adaptive Rubrics";
 
-const BASE_PATH = '/';
+const BASE_PATH = '';
 
 const AUTHORS = [
   {
@@ -658,7 +658,7 @@ const SidePanel = ({
 
 // Load example JSON
 const loadExampleData = async (): Promise<ExampleData | null> => {
-  const response = await fetch("/example.json");
+  const response = await fetch(`${BASE_PATH}/example.json`);
   if (!response.ok) {
     console.error("Failed to load example.json");
     return null;
@@ -997,7 +997,7 @@ const MobileView = () => (
       </div>
       <div className="rounded-lg border bg-background shadow-lg overflow-hidden">
         <Image 
-          src={`${BASE_PATH}/images/demo.png`}
+          src="/images/demo.png"
           alt="DR Tulu Demo Screenshot"
           width={1200}
           height={800}
