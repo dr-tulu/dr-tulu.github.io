@@ -133,7 +133,7 @@ const FULL_AUTHORS = [
   },
 ];
 
-const PAPER_URL = "https://www.datocms-assets.com/64837/1763476533-dr_tulu.pdf";
+const PAPER_URL = "https://allenai.org/papers/drtulu";
 
 const scrollToAuthors = () => {
   const authorsSection = document.getElementById("authors-section");
