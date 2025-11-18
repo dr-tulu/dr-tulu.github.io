@@ -546,7 +546,7 @@ const TraceSection = ({
 
   if (section.type === "tool_output") {
     return (
-      <div className="bg-background rounded-md border overflow-hidden border  hover:shadow-md">
+      <div className="bg-background rounded-md overflow-hidden border  hover:shadow-md">
         <Collapsible open={isToolCallOpen} onOpenChange={setIsToolCallOpen}>
           <CollapsibleTrigger className="flex items-center justify-between p-4 w-full hover:bg-muted/50 transition-colors duration-200 ">
             <span className="text-xs font-semibold">Tool Output</span>
@@ -559,13 +559,15 @@ const TraceSection = ({
             </div>
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <div className="max-h-48 overflow-y-auto overflow-x-hidden min-w-0">
-              <p
-                className="text-xs whitespace-pre-wrap font-mono leading-relaxed text-muted-foreground break-words min-w-0 max-w-full"
-                style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
-              >
-                {section.content}
-              </p>
+            <div className="px-4 pb-4 pt-1">
+              <div className="max-h-48 overflow-y-auto overflow-x-hidden min-w-0">
+                <p
+                  className="text-xs whitespace-pre-wrap font-mono leading-relaxed text-muted-foreground break-words min-w-0 max-w-full"
+                  style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
+                >
+                  {section.content}
+                </p>
+              </div>
             </div>
           </CollapsibleContent>
         </Collapsible>
