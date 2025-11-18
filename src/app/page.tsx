@@ -13,6 +13,9 @@ import {
   ArrowDownFromLine,
   ArrowUpFromLine,
   Expand,
+  Github,
+  BookOpen,
+  Database,
 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -110,17 +113,59 @@ const Headline = () => (
     {/* <PageHeaderDescription>
       An advanced AI assistant for long-form deep research with adaptive evaluation rubrics.
     </PageHeaderDescription> */}
-    <Separator className="mb-0.25 mt-2" />
-    <div className="flex items-center gap-2">
-      <span className="text-sm text-muted-foreground">DR Tulu Authors</span>
-      <Button
-        variant="link"
-        className="px-0 text-sm inline-flex items-center gap-1 hover:gap-2 transition-all"
-        onClick={scrollToAuthors}
-      >
-        See full author list below
-        <ArrowRightIcon className="h-3 w-3" />
-      </Button>
+    <div className="w-full -mx-4">
+      <Separator className="mb-0.25 mt-2" />
+    </div>
+    <div className="flex items-center justify-between gap-4 w-full -mx-4 px-4">
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground">DR Tulu Authors</span>
+        <Button
+          variant="link"
+          className="px-0 text-sm inline-flex items-center gap-1 hover:gap-2 transition-all"
+          onClick={scrollToAuthors}
+        >
+          See full author list below
+          <ArrowRightIcon className="h-3 w-3" />
+        </Button>
+      </div>
+      <div className="flex items-center gap-2">
+        <Link
+          href="https://github.com/rlresearch/dr-tulu"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(
+            buttonVariants({ variant: "ghost", size: "sm" }),
+            "gap-1.5 text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <Github className="h-3.5 w-3.5" />
+          Code
+        </Link>
+        <Link
+          href="https://huggingface.co/collections/rl-research/dr-tulu"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(
+            buttonVariants({ variant: "ghost", size: "sm" }),
+            "gap-1.5 text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <Database className="h-3.5 w-3.5" />
+          Data & Models
+        </Link>
+        <Link
+          href="https://allenai.org/blog/dr-tulu"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(
+            buttonVariants({ variant: "ghost", size: "sm" }),
+            "gap-1.5 text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <BookOpen className="h-3.5 w-3.5" />
+          Blogpost
+        </Link>
+      </div>
     </div>
   </PageHeader>
 );
