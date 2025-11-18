@@ -802,17 +802,30 @@ const parseSnippetsFromGeneratedText = (
   generatedText: string
 ): Map<string, Source> => {
   const snippetMap = new Map<string, Source>();
-  const snippetRegex =
-    /<snippet id=([^\s>]+)>\s*Title:\s*([^\n]+)\s*URL:\s*([^\n]+)\s*Snippet:\s*([^<]+)<\/snippet>/g;
-  let match;
-
-  while ((match = snippetRegex.exec(generatedText)) !== null) {
-    const [, id, title, url, snippet] = match;
-    snippetMap.set(id.trim(), {
-      id: id.trim(),
-      title: title.trim(),
-      url: url.trim(),
-      snippet: snippet.trim(),
+  
+  // Step 1: Find all <snippet id=xxx>...</snippet> blocks
+  const snippetBlockRegex = /<snippet id=([^\s>]+)>([\s\S]*?)<\/snippet>/g;
+  let blockMatch;
+  
+  while ((blockMatch = snippetBlockRegex.exec(generatedText)) !== null) {
+    const id = blockMatch[1].trim();
+    const content = blockMatch[2];
+    
+    // Step 2: Extract fields from the content
+    // Match lines that start with "Title:", "URL:", "Snippet:"
+    const titleMatch = content.match(/^\s*Title:\s*(.+)$/m);
+    const urlMatch = content.match(/^\s*URL:\s*(.+)$/m);
+    const snippetMatch = content.match(/^\s*Snippet:\s*([\s\S]+?)(?=^\s*(?:Title:|URL:|Snippet:|$))/m);
+    
+    const title = titleMatch ? titleMatch[1].trim() : "";
+    const url = urlMatch ? urlMatch[1].trim() : "";
+    const snippet = snippetMatch ? snippetMatch[1].trim() : content.trim();
+    
+    snippetMap.set(id, {
+      id,
+      title,
+      url,
+      snippet,
     });
   }
 
