@@ -671,10 +671,12 @@ const SidePanel = ({
   fullTraces,
   documents,
   sources,
+  visibleTraceIndex,
 }: {
   fullTraces: FullTraces;
   documents: Document[];
   sources: Source[];
+  visibleTraceIndex: number;
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [parsedTraces, setParsedTraces] = useState<TraceSection[]>([]);
@@ -738,7 +740,14 @@ const SidePanel = ({
           <ScrollArea className="h-[calc(100%-3rem)] p-4">
             <div className="space-y-3">
               {parsedTraces.map((section, index) => (
-                <TraceSection key={index} section={section} index={index} />
+                index <= visibleTraceIndex ? (
+                  <div
+                    key={index}
+                    className="animate-in fade-in-50 slide-in-from-right-4 duration-300"
+                  >
+                    <TraceSection section={section} index={index} />
+                  </div>
+                ) : null
               ))}
             </div>
           </ScrollArea>
@@ -981,21 +990,70 @@ const ChatInterface = ({
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [showAssistantLoading, setShowAssistantLoading] = useState(false);
+  const [visibleTraceIndex, setVisibleTraceIndex] = useState(-1);
+  const [showFinalResponse, setShowFinalResponse] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const panelRef = useRef<any>(null);
   const isInitialLoadRef = useRef<boolean>(true);
+  const fullMessagesRef = useRef<Message[]>([]);
+  const traceSectionsRef = useRef<TraceSection[]>([]);
 
-  // Load example data on mount
+  // Load example data on mount with progressive animation
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
+      setShowAssistantLoading(false);
+      setVisibleTraceIndex(-1);
+      setShowFinalResponse(false);
+      
       const data = await loadExampleData(selectedExample);
       if (data) {
         const msgs = convertExampleToMessages(data);
-        setMessages(msgs);
+        fullMessagesRef.current = msgs;
+        
+        // Parse trace sections once
+        if (msgs[1]?.fullTraces) {
+          traceSectionsRef.current = parseFullTraces(msgs[1].fullTraces.generated_text);
+        }
+        
+        // Step 1: Show user message
+        setMessages([msgs[0]]);
+        setIsLoading(false);
+        
+        // Step 2: Show assistant loading after 600ms
+        setTimeout(() => {
+          setShowAssistantLoading(true);
+          
+          // Step 3: Progressively show trace sections
+          const totalSections = traceSectionsRef.current.length;
+          let currentIndex = 0;
+          
+          const showNextTrace = () => {
+            if (currentIndex < totalSections) {
+              setVisibleTraceIndex(currentIndex);
+              currentIndex++;
+              // Vary delay based on section type for more natural feel - slower pacing
+              const section = traceSectionsRef.current[currentIndex - 1];
+              const delay = section.type === "text" ? 600 : section.type === "tool_call" ? 800 : 500;
+              setTimeout(showNextTrace, delay);
+            } else {
+              // Step 4: Show final response after all traces
+              setTimeout(() => {
+                setShowAssistantLoading(false);
+                setShowFinalResponse(true);
+                setMessages(msgs);
+              }, 800);
+            }
+          };
+          
+          // Start showing traces after a brief delay
+          setTimeout(showNextTrace, 800);
+        }, 600);
+      } else {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
     loadData();
   }, [selectedExample]);
@@ -1055,15 +1113,61 @@ const ChatInterface = ({
                   </div>
                 </div>
               ) : (
-                messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={cn(
-                      "flex gap-3",
-                      message.role === "user" ? "justify-end" : "justify-start"
-                    )}
-                  >
-                    {message.role === "assistant" && (
+                <>
+                  {messages.map((message) => (
+                    <div
+                      key={message.id}
+                      className={cn(
+                        "flex gap-3 animate-in fade-in-50 slide-in-from-bottom-4 duration-500",
+                        message.role === "user" ? "justify-end" : "justify-start"
+                      )}
+                    >
+                      {message.role === "assistant" && (
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage
+                            src={`${BASE_PATH}/images/logo.png`}
+                            alt="DR Tulu"
+                          />
+                          <AvatarFallback className="bg-primary text-primary-foreground">
+                            DT
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                      <div className="flex flex-col gap-2 max-w-[80%]">
+                        {message.role === "assistant" && (
+                          <i className="text-xs text-muted-foreground">
+                            Answer based on cited docs in the sidebar
+                          </i>
+                        )}
+                        <div
+                          className={cn(
+                            "rounded-lg px-4 py-3",
+                            message.role === "user"
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted"
+                          )}
+                        >
+                          <div className="text-sm whitespace-pre-wrap leading-relaxed">
+                            {message.role === "assistant" && message.sources
+                              ? parseCitationsWithTooltips(
+                                  message.content,
+                                  message.sources
+                                )
+                              : message.content}
+                          </div>
+                        </div>
+                      </div>
+                      {message.role === "user" && (
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback>U</AvatarFallback>
+                        </Avatar>
+                      )}
+                    </div>
+                  ))}
+                  
+                  {/* Show assistant loading state */}
+                  {showAssistantLoading && (
+                    <div className="flex gap-3 justify-start animate-in fade-in-50 slide-in-from-bottom-4 duration-500">
                       <Avatar className="h-8 w-8">
                         <AvatarImage
                           src={`${BASE_PATH}/images/logo.png`}
@@ -1073,44 +1177,24 @@ const ChatInterface = ({
                           DT
                         </AvatarFallback>
                       </Avatar>
-                    )}
-                    <div className="flex flex-col gap-2 max-w-[80%]">
-                      {message.role === "assistant" && (
+                      <div className="flex flex-col gap-2 max-w-[80%]">
                         <i className="text-xs text-muted-foreground">
-                          Answer based on cited docs in the sidebar
+                          Researching and analyzing documents...
                         </i>
-                      )}
-                      <div
-                        className={cn(
-                          "rounded-lg px-4 py-3",
-                          message.role === "user"
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted"
-                        )}
-                      >
-                        <div className="text-sm whitespace-pre-wrap leading-relaxed">
-                          {message.role === "assistant" && message.sources
-                            ? parseCitationsWithTooltips(
-                                message.content,
-                                message.sources
-                              )
-                            : message.content}
+                        <div className="rounded-lg px-4 py-3 bg-muted">
+                          <div className="flex items-center gap-2">
+                            <div className="flex gap-1">
+                              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                            </div>
+                            <span className="text-sm text-muted-foreground">Thinking</span>
+                          </div>
                         </div>
                       </div>
-
-                      {/*message.role === "assistant" &&
-                        message.sources &&
-                        message.sources.length > 0 && (
-                          <SourcesCollapsible sources={message.sources} />
-                        )*/}
                     </div>
-                    {message.role === "user" && (
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback>U</AvatarFallback>
-                      </Avatar>
-                    )}
-                  </div>
-                ))
+                  )}
+                </>
               )}
             </div>
           </ScrollArea>
@@ -1150,7 +1234,7 @@ const ChatInterface = ({
       </ResizablePanel>
 
       {/* Side Panel for Full Traces and Documents */}
-      {messages.length > 0 && messages[1]?.fullTraces && (
+      {!isLoading && fullMessagesRef.current[1]?.fullTraces && (
         <>
           <ResizableHandle withHandle className="w-0" />
           <ResizablePanel
@@ -1163,9 +1247,10 @@ const ChatInterface = ({
             className="h-[600px]"
           >
             <SidePanel
-              fullTraces={messages[1].fullTraces}
-              documents={messages[1].documents || []}
-              sources={messages[1].sources || []}
+              fullTraces={fullMessagesRef.current[1].fullTraces}
+              documents={fullMessagesRef.current[1].documents || []}
+              sources={fullMessagesRef.current[1].sources || []}
+              visibleTraceIndex={visibleTraceIndex}
             />
           </ResizablePanel>
         </>
