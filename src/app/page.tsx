@@ -133,7 +133,7 @@ const FULL_AUTHORS = [
   },
 ];
 
-const PAPER_URL = "https://arxiv.org/";
+const PAPER_URL = "https://www.datocms-assets.com/64837/1763476533-dr_tulu.pdf";
 
 const scrollToAuthors = () => {
   const authorsSection = document.getElementById("authors-section");
@@ -1017,7 +1017,7 @@ const ChatInterface = ({
       isInitialLoadRef.current = false;
       return;
     }
-
+    /*
     // Auto-scroll to bottom when new messages arrive (but not on initial load)
     if (scrollAreaRef.current && !isInitialLoadRef.current) {
       const scrollContainer = scrollAreaRef.current.querySelector(
@@ -1027,6 +1027,7 @@ const ChatInterface = ({
         scrollContainer.scrollTop = scrollContainer.scrollHeight;
       }
     }
+      */
   }, [messages]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -1076,7 +1077,7 @@ const ChatInterface = ({
                     <div className="flex flex-col gap-2 max-w-[80%]">
                       {message.role === "assistant" && (
                         <i className="text-xs text-muted-foreground">
-                          Answer based on cited docs on the right
+                          Answer based on cited docs in the sidebar
                         </i>
                       )}
                       <div
@@ -1355,7 +1356,9 @@ export default function Home() {
                 DR Tulu for Deep Research
               </h2>
               <div className="flex items-center gap-3">
-                <label className="text-sm font-medium">Select a Example:</label>
+                <label className="text-sm font-medium">
+                  See more randomly sampled examples:
+                </label>
                 <Select
                   value={selectedExample}
                   onValueChange={setSelectedExample}
