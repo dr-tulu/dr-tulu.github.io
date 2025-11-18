@@ -55,7 +55,7 @@ import {
   PageHeader,
   PageHeaderDescription,
   PageHeaderHeading,
-} from "./components/page-header";
+} from "@/app/components/page-header";
 import { cn } from "@/lib/utils";
 
 const TITLE =
@@ -63,38 +63,51 @@ const TITLE =
 
 const BASE_PATH = "";
 
-const FULL_AUTHORS = [
-  { name: "Rulin Shao", affiliation: "University of Washington", isFirstAuthor: true, isCoreContributor: true },
-  { name: "Akari Asai", affiliation: "Allen Institute for AI, Carnegie Mellon University", isFirstAuthor: true, isCoreContributor: true },
-  { name: "Shannon Zejiang Shen", affiliation: "Massachusetts Institute of Technology", isFirstAuthor: true, isCoreContributor: true },
-  { name: "Hamish Ivison", affiliation: "University of Washington, Allen Institute for AI", isFirstAuthor: true, isCoreContributor: true },
-  { name: "Varsha Kishore", affiliation: "University of Washington, Allen Institute for AI", isCoreContributor: true },
-  { name: "Jingming Zhuo", affiliation: "University of Washington", isCoreContributor: true },
-  { name: "Xinran Zhao", affiliation: "Carnegie Mellon University" },
-  { name: "Molly Park", affiliation: "University of Washington" },
-  { name: "Samuel Finlayson", affiliation: "University of Washington, Seattle Children's Hospital" },
-  { name: "David Sontag", affiliation: "Massachusetts Institute of Technology" },
-  { name: "Tyler Murray", affiliation: "Allen Institute for AI" },
-  { name: "Sewon Min", affiliation: "Allen Institute for AI, University of California, Berkeley" },
-  { name: "Pradeep Dasigi", affiliation: "Allen Institute for AI" },
-  { name: "Luca Soldaini", affiliation: "Allen Institute for AI" },
-  { name: "Faeze Brahman", affiliation: "Allen Institute for AI" },
-  { name: "Wen-tau Yih", affiliation: "University of Washington" },
-  { name: "Tongshuang Wu", affiliation: "Carnegie Mellon University" },
-  { name: "Luke Zettlemoyer", affiliation: "University of Washington" },
-  { name: "Yoon Kim", affiliation: "Massachusetts Institute of Technology" },
-  { name: "Hannaneh Hajishirzi", affiliation: "University of Washington, Allen Institute for AI" },
-  { name: "Pang Wei Koh", affiliation: "University of Washington, Allen Institute for AI" },
+const AUTHORS = [
+  {
+    name: "Dr Tulu Authors",
+    affiliation: "Ai2 and others",
+    email: "dr.tulu@gmail.com",
+    website: "https://dr-tulu.github.io/",
+    avatar: `${BASE_PATH}/images/logo.png`,
+  },
 ];
 
 const PAPER_URL = "https://arxiv.org/";
 
-const scrollToAuthors = () => {
-  const authorsSection = document.getElementById("authors-section");
-  if (authorsSection) {
-    authorsSection.scrollIntoView({ behavior: "smooth" });
-  }
-};
+const AuthorHoverCard = (author: (typeof AUTHORS)[0]) => (
+  <HoverCard openDelay={100} closeDelay={100}>
+    <HoverCardTrigger className="pr-4" style={{ marginLeft: 0 }}>
+      <Button
+        className="px-0"
+        variant="link"
+        onClick={() => {
+          open(author.website, "_blank");
+        }}
+      >
+        {author.name}
+      </Button>
+    </HoverCardTrigger>
+    <HoverCardContent>
+      <div className="flex justify-between">
+        <Avatar className="mr-4">
+          <AvatarImage src={author.avatar} />
+          <AvatarFallback>{author.name[0]}</AvatarFallback>
+        </Avatar>
+        <div className="space-y-1">
+          <h4 className="text-sm font-semibold">{author.name}</h4>
+          <p className="text-sm">{author.affiliation}</p>
+          <div className="flex items-center pt-2 overflow-wrap break-words">
+            <strong>Email: </strong>{" "}
+            <Link className="pl-0.5" href={`mailto:${author.email}`}>
+              {author.email}
+            </Link>
+          </div>
+        </div>
+      </div>
+    </HoverCardContent>
+  </HoverCard>
+);
 
 const Headline = () => (
   <PageHeader className="page-header pb-2 pt-0">
@@ -111,16 +124,10 @@ const Headline = () => (
       An advanced AI assistant for long-form deep research with adaptive evaluation rubrics.
     </PageHeaderDescription> */}
     <Separator className="mb-0.25 mt-2" />
-    <div className="flex items-center gap-2">
-      <span className="text-sm text-muted-foreground">DR Tulu Authors</span>
-      <Button
-        variant="link"
-        className="px-0 text-sm inline-flex items-center gap-1 hover:gap-2 transition-all"
-        onClick={scrollToAuthors}
-      >
-        See full author list below
-        <ArrowRightIcon className="h-3 w-3" />
-      </Button>
+    <div className="flex flex-wrap justify-start items-start align-start space-x-4">
+      {AUTHORS.map((author, index) => (
+        <React.Fragment key={index}>{AuthorHoverCard(author)}</React.Fragment>
+      ))}
     </div>
   </PageHeader>
 );
@@ -176,6 +183,12 @@ type ExampleData = {
       }>;
     }>;
   };
+};
+
+type ExampleListItem = {
+  dataset_name: string;
+  example_title: string;
+  json_file_name: string;
 };
 
 // Utility: Parse citations in text and return React elements with tooltips
@@ -459,6 +472,7 @@ const TraceSection = ({
 }) => {
   const [isThinkingOpen, setIsThinkingOpen] = useState(false);
   const [isToolCallOpen, setIsToolCallOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   if (section.type === "text") {
     const contentWithoutThinkTags = section.content
@@ -468,7 +482,7 @@ const TraceSection = ({
       ? contentWithoutThinkTags
       : contentWithoutThinkTags.split(" ").slice(0, 30).join(" ") + "...";
     return (
-      <div className="bg-background rounded-md overflow-hidden border border-green-200 bg-green-50 hover:shadow-md hover:border-green-300 hover:bg-green-100">
+      <div className="bg-green-50 rounded-md border border-green-200 overflow-hidden hover:shadow-md hover:border-green-300 hover:bg-green-100">
         <Collapsible open={isThinkingOpen} onOpenChange={setIsThinkingOpen}>
           <CollapsibleTrigger className="flex items-center justify-between p-4 w-full hover:bg-muted/50 transition-colors duration-200 ">
             <span className="text-xs font-semibold  text-green-700">
@@ -503,61 +517,88 @@ const TraceSection = ({
   }
 
   if (section.type === "tool_call") {
+    const contentPreview = section.content.slice(0, 150) + 
+      (section.content.length > 150 ? "..." : "");
+    
     return (
-      <div className="bg-blue-50 p-4 rounded-md border border-blue-200 transition-all duration-200 hover:shadow-md hover:border-blue-300 hover:bg-blue-100 cursor-pointer">
-        <div className="flex items-start justify-between gap-2 mb-2 min-w-0">
-          <div className="flex-1 min-w-0">
-            <span className="text-xs font-semibold text-blue-700">
-              Tool Call: {section.toolName}
-            </span>
-            {section.toolParams &&
-              Object.keys(section.toolParams).length > 0 && (
-                <div className="mt-1 space-y-0.5">
-                  {Object.entries(section.toolParams).map(([key, value]) => (
-                    <div
-                      key={key}
-                      className="text-xs font-mono text-muted-foreground break-words min-w-0"
-                    >
-                      <span className="">{key}:</span> {value}
-                    </div>
-                  ))}
-                </div>
+      <div className="bg-blue-50 rounded-md border border-blue-200 overflow-hidden transition-all duration-200 hover:shadow-md hover:border-blue-300 hover:bg-blue-100">
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+          <CollapsibleTrigger className="flex items-center justify-between p-4 w-full hover:bg-blue-100/50 transition-colors duration-200">
+            <div className="flex-1 min-w-0">
+              <span className="text-xs font-semibold text-blue-700">
+                Tool Call: {section.toolName}
+              </span>
+              {section.toolParams &&
+                Object.keys(section.toolParams).length > 0 && (
+                  <div className="mt-1 space-y-0.5">
+                    {Object.entries(section.toolParams).map(([key, value]) => (
+                      <div
+                        key={key}
+                        className="text-xs font-mono text-muted-foreground break-words"
+                      >
+                        <span className="text-blue-600">{key}:</span> {value}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              {!isOpen && (
+                <p className="text-xs text-muted-foreground mt-1 font-mono line-clamp-2">
+                  {contentPreview}
+                </p>
               )}
-          </div>
-          {/* <span className="text-xs text-muted-foreground bg-blue-100 px-2 py-0.5 rounded flex-shrink-0">
-            #{index + 1}
-          </span> */}
-        </div>
-        <div className="max-h-48 overflow-y-auto overflow-x-hidden min-w-0 font-mono text-xs">
-          <p style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>
-            {section.content}
-          </p>
-        </div>
+            </div>
+            <div className="ml-2 flex-shrink-0">
+              {isOpen ? (
+                <ArrowUpFromLine className="h-3.5 w-3.5 text-blue-600" />
+              ) : (
+                <ArrowDownFromLine className="h-3.5 w-3.5 text-blue-600" />
+              )}
+            </div>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="px-4 pb-4 border-t border-blue-200">
+              <div className="max-h-96 overflow-y-auto pt-3">
+                <p className="text-xs whitespace-pre-wrap font-mono leading-relaxed break-words"
+                   style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>
+                  {section.content}
+                </p>
+              </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
     );
   }
 
   if (section.type === "tool_output") {
+    const contentPreview = section.content.slice(0, 150) + 
+      (section.content.length > 150 ? "..." : "");
+    
     return (
-      <div className="bg-background rounded-md overflow-hidden border  hover:shadow-md">
+      <div className="bg-gray-50 rounded-md border border-gray-200 overflow-hidden hover:shadow-md hover:border-gray-300 transition-all duration-200">
         <Collapsible open={isToolCallOpen} onOpenChange={setIsToolCallOpen}>
-          <CollapsibleTrigger className="flex items-center justify-between p-4 w-full hover:bg-muted/50 transition-colors duration-200 ">
-            <span className="text-xs font-semibold">Tool Output</span>
-            <div className="transform transition-all duration-300 ease-in-out">
+          <CollapsibleTrigger className="flex items-center justify-between p-4 w-full hover:bg-gray-100/50 transition-colors duration-200">
+            <div className="flex-1">
+              <span className="text-xs font-semibold text-gray-700">Tool Output</span>
+              {!isToolCallOpen && (
+                <p className="text-xs text-muted-foreground mt-1 font-mono line-clamp-2">
+                  {contentPreview}
+                </p>
+              )}
+            </div>
+            <div className="ml-2 flex-shrink-0">
               {isToolCallOpen ? (
-                <ArrowUpFromLine className="h-3.5 w-3.5 text-muted-foreground" />
+                <ArrowUpFromLine className="h-3.5 w-3.5 text-gray-600" />
               ) : (
-                <ArrowDownFromLine className="h-3.5 w-3.5 text-muted-foreground" />
+                <ArrowDownFromLine className="h-3.5 w-3.5 text-gray-600" />
               )}
             </div>
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <div className="px-4 pb-4 pt-1">
-              <div className="max-h-48 overflow-y-auto overflow-x-hidden min-w-0">
-                <p
-                  className="text-xs whitespace-pre-wrap font-mono leading-relaxed text-muted-foreground break-words min-w-0 max-w-full"
-                  style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
-                >
+            <div className="px-4 pb-4 border-t border-gray-200">
+              <div className="max-h-96 overflow-y-auto pt-3">
+                <p className="text-xs whitespace-pre-wrap font-mono leading-relaxed text-muted-foreground break-words"
+                   style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>
                   {section.content}
                 </p>
               </div>
@@ -722,11 +763,21 @@ const SidePanel = ({
   );
 };
 
-// Load example JSON
-const loadExampleData = async (): Promise<ExampleData | null> => {
-  const response = await fetch(`${BASE_PATH}/example.json`);
+// List available examples
+const listExamples = async (): Promise<ExampleListItem[]> => {
+  const response = await fetch(`${BASE_PATH}/example-list.json`);
   if (!response.ok) {
-    console.error("Failed to load example.json");
+    console.error("Failed to load example-list.json");
+    return [];
+  }
+  return response.json();
+};
+
+// Load example JSON
+const loadExampleData = async (jsonFileName: string): Promise<ExampleData | null> => {
+  const response = await fetch(`${BASE_PATH}/${jsonFileName}`);
+  if (!response.ok) {
+    console.error(`Failed to load ${jsonFileName}`);
     return null;
   }
   return response.json();
@@ -868,7 +919,7 @@ const ChatInterface = ({
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
-      const data = await loadExampleData();
+      const data = await loadExampleData(selectedExample);
       if (data) {
         const msgs = convertExampleToMessages(data);
         setMessages(msgs);
@@ -1046,55 +1097,8 @@ const ChatInterface = ({
   );
 };
 
-const AuthorsSection = () => (
-  <section id="authors-section" className="mt-16 py-12 bg-muted/10">
-    <div className="container px-16">
-      <div className="space-y-6">
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-semibold tracking-tight">Authors</h2>
-          <p className="text-sm text-muted-foreground">
-            ♡ Joint first authors, † Core contributors
-          </p>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {FULL_AUTHORS.map((author, index) => (
-            <div
-              key={index}
-              className="bg-background rounded-lg border p-4 hover:shadow-md transition-all duration-200 hover:border-primary/30"
-            >
-              <div className="space-y-1">
-                <h3 className="font-medium text-sm">
-                  {author.name}
-                  {author.isFirstAuthor && author.isCoreContributor && (
-                    <sup className="text-xs ml-0.5 text-primary">♡†</sup>
-                  )}
-                  {!author.isFirstAuthor && author.isCoreContributor && (
-                    <sup className="text-xs ml-0.5 text-primary">†</sup>
-                  )}
-                </h3>
-                <p className="text-xs text-muted-foreground">{author.affiliation}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="text-center">
-          <Link
-            href={PAPER_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
-          >
-            See full author contributions in paper
-            <ExternalLink className="h-3 w-3" />
-          </Link>
-        </div>
-      </div>
-    </div>
-  </section>
-);
-
 const Footer = () => (
-  <footer className="border-t bg-muted/20">
+  <footer className="mt-16 border-t bg-muted/20">
     <div className="container py-6 px-16">
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="text-sm text-muted-foreground">
@@ -1169,9 +1173,11 @@ const MobileView = () => (
 );
 
 export default function Home() {
-  const [selectedExample, setSelectedExample] = useState<string>("example");
+  const [selectedExample, setSelectedExample] = useState<string>("");
   const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
   const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [examplesList, setExamplesList] = useState<ExampleListItem[]>([]);
+  const [isLoadingList, setIsLoadingList] = useState<boolean>(true);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -1183,6 +1189,31 @@ export default function Home() {
 
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
+
+  // Load available examples on mount
+  useEffect(() => {
+    const loadExamplesList = async () => {
+      setIsLoadingList(true);
+      const examples = await listExamples();
+      setExamplesList(examples);
+      
+      // Set the first available example as selected
+      if (examples.length > 0) {
+        setSelectedExample(examples[0].json_file_name);
+      }
+      setIsLoadingList(false);
+    };
+    loadExamplesList();
+  }, []);
+
+  // Group examples by dataset
+  const groupedExamples = examplesList.reduce((acc, example) => {
+    if (!acc[example.dataset_name]) {
+      acc[example.dataset_name] = [];
+    }
+    acc[example.dataset_name].push(example);
+    return acc;
+  }, {} as Record<string, ExampleListItem[]>);
 
   if (isMobile) {
     return <MobileView />;
@@ -1203,15 +1234,29 @@ export default function Home() {
                 <Select
                   value={selectedExample}
                   onValueChange={setSelectedExample}
-                  disabled
+                  disabled={isLoadingList || examplesList.length === 0}
                 >
-                  <SelectTrigger className="w-64">
+                  <SelectTrigger className="w-96">
                     <SelectValue placeholder="Choose an example" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="example">
-                      Example 1: Feather Hydrolysate Research
-                    </SelectItem>
+                    {Object.entries(groupedExamples).map(([datasetName, examples]) => (
+                      <React.Fragment key={datasetName}>
+                        <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+                          {datasetName}
+                        </div>
+                        {examples.map((example) => (
+                          <SelectItem 
+                            key={example.json_file_name} 
+                            value={example.json_file_name}
+                            className="pl-6"
+                          >
+                            {example.example_title.slice(0, 60)}
+                            {example.example_title.length > 60 ? "..." : ""}
+                          </SelectItem>
+                        ))}
+                      </React.Fragment>
+                    ))}
                   </SelectContent>
                 </Select>
                 {/* <TooltipProvider>
@@ -1238,15 +1283,16 @@ export default function Home() {
               </div>
             </div>
             <Separator className="mt-2" />
-            <ChatInterface
-              selectedExample={selectedExample}
-              isPanelOpen={isPanelOpen}
-              onPanelToggle={() => setIsPanelOpen(!isPanelOpen)}
-            />
+            {selectedExample && (
+              <ChatInterface
+                selectedExample={selectedExample}
+                isPanelOpen={isPanelOpen}
+                onPanelToggle={() => setIsPanelOpen(!isPanelOpen)}
+              />
+            )}
           </div>
         </div>
       </div>
-      <AuthorsSection />
       <Footer />
     </div>
   );
