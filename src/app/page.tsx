@@ -67,18 +67,55 @@ const TITLE =
 const BASE_PATH = "";
 
 const FULL_AUTHORS = [
-  { name: "Rulin Shao", affiliation: "University of Washington", isFirstAuthor: true, isCoreContributor: true },
-  { name: "Akari Asai", affiliation: "Allen Institute for AI, Carnegie Mellon University", isFirstAuthor: true, isCoreContributor: true },
-  { name: "Shannon Zejiang Shen", affiliation: "Massachusetts Institute of Technology", isFirstAuthor: true, isCoreContributor: true },
-  { name: "Hamish Ivison", affiliation: "University of Washington, Allen Institute for AI", isFirstAuthor: true, isCoreContributor: true },
-  { name: "Varsha Kishore", affiliation: "University of Washington, Allen Institute for AI", isCoreContributor: true },
-  { name: "Jingming Zhuo", affiliation: "University of Washington", isCoreContributor: true },
+  {
+    name: "Rulin Shao",
+    affiliation: "University of Washington",
+    isFirstAuthor: true,
+    isCoreContributor: true,
+  },
+  {
+    name: "Akari Asai",
+    affiliation: "Allen Institute for AI, Carnegie Mellon University",
+    isFirstAuthor: true,
+    isCoreContributor: true,
+  },
+  {
+    name: "Shannon Zejiang Shen",
+    affiliation: "Massachusetts Institute of Technology",
+    isFirstAuthor: true,
+    isCoreContributor: true,
+  },
+  {
+    name: "Hamish Ivison",
+    affiliation: "University of Washington, Allen Institute for AI",
+    isFirstAuthor: true,
+    isCoreContributor: true,
+  },
+  {
+    name: "Varsha Kishore",
+    affiliation: "University of Washington, Allen Institute for AI",
+    isCoreContributor: true,
+  },
+  {
+    name: "Jingming Zhuo",
+    affiliation: "University of Washington",
+    isCoreContributor: true,
+  },
   { name: "Xinran Zhao", affiliation: "Carnegie Mellon University" },
   { name: "Molly Park", affiliation: "University of Washington" },
-  { name: "Samuel Finlayson", affiliation: "University of Washington, Seattle Children's Hospital" },
-  { name: "David Sontag", affiliation: "Massachusetts Institute of Technology" },
+  {
+    name: "Samuel Finlayson",
+    affiliation: "University of Washington, Seattle Children's Hospital",
+  },
+  {
+    name: "David Sontag",
+    affiliation: "Massachusetts Institute of Technology",
+  },
   { name: "Tyler Murray", affiliation: "Allen Institute for AI" },
-  { name: "Sewon Min", affiliation: "Allen Institute for AI, University of California, Berkeley" },
+  {
+    name: "Sewon Min",
+    affiliation: "Allen Institute for AI, University of California, Berkeley",
+  },
   { name: "Pradeep Dasigi", affiliation: "Allen Institute for AI" },
   { name: "Luca Soldaini", affiliation: "Allen Institute for AI" },
   { name: "Faeze Brahman", affiliation: "Allen Institute for AI" },
@@ -86,8 +123,14 @@ const FULL_AUTHORS = [
   { name: "Tongshuang Wu", affiliation: "Carnegie Mellon University" },
   { name: "Luke Zettlemoyer", affiliation: "University of Washington" },
   { name: "Yoon Kim", affiliation: "Massachusetts Institute of Technology" },
-  { name: "Hannaneh Hajishirzi", affiliation: "University of Washington, Allen Institute for AI" },
-  { name: "Pang Wei Koh", affiliation: "University of Washington, Allen Institute for AI" },
+  {
+    name: "Hannaneh Hajishirzi",
+    affiliation: "University of Washington, Allen Institute for AI",
+  },
+  {
+    name: "Pang Wei Koh",
+    affiliation: "University of Washington, Allen Institute for AI",
+  },
 ];
 
 const PAPER_URL = "https://arxiv.org/";
@@ -785,7 +828,9 @@ const listExamples = async (): Promise<ExampleListItem[]> => {
 };
 
 // Load example JSON
-const loadExampleData = async (jsonFileName: string): Promise<ExampleData | null> => {
+const loadExampleData = async (
+  jsonFileName: string
+): Promise<ExampleData | null> => {
   const response = await fetch(`${BASE_PATH}/${jsonFileName}`);
   if (!response.ok) {
     console.error(`Failed to load ${jsonFileName}`);
@@ -813,25 +858,27 @@ const parseSnippetsFromGeneratedText = (
   generatedText: string
 ): Map<string, Source> => {
   const snippetMap = new Map<string, Source>();
-  
+
   // Step 1: Find all <snippet id=xxx>...</snippet> blocks
   const snippetBlockRegex = /<snippet id=([^\s>]+)>([\s\S]*?)<\/snippet>/g;
   let blockMatch;
-  
+
   while ((blockMatch = snippetBlockRegex.exec(generatedText)) !== null) {
     const id = blockMatch[1].trim();
     const content = blockMatch[2];
-    
+
     // Step 2: Extract fields from the content
     // Match lines that start with "Title:", "URL:", "Snippet:"
     const titleMatch = content.match(/^\s*Title:\s*(.+)$/m);
     const urlMatch = content.match(/^\s*URL:\s*(.+)$/m);
-    const snippetMatch = content.match(/^\s*Snippet:\s*([\s\S]+?)(?=^\s*(?:Title:|URL:|Snippet:|$))/m);
-    
+    const snippetMatch = content.match(
+      /^\s*Snippet:\s*([\s\S]+?)(?=^\s*(?:Title:|URL:|Snippet:|$))/m
+    );
+
     const title = titleMatch ? titleMatch[1].trim() : "";
     const url = urlMatch ? urlMatch[1].trim() : "";
     const snippet = snippetMatch ? snippetMatch[1].trim() : content.trim();
-    
+
     snippetMap.set(id, {
       id,
       title,
@@ -1027,6 +1074,11 @@ const ChatInterface = ({
                       </Avatar>
                     )}
                     <div className="flex flex-col gap-2 max-w-[80%]">
+                      {message.role === "assistant" && (
+                        <i className="text-xs text-muted-foreground">
+                          Answer based on cited docs on the right
+                        </i>
+                      )}
                       <div
                         className={cn(
                           "rounded-lg px-4 py-3",
@@ -1088,8 +1140,8 @@ const ChatInterface = ({
             </div>
             <div className="flex pl-2 mt-2">
               <p className="text-xs text-muted-foreground/60">
-                Interactive chat coming soon. Currently displaying example
-                research output.
+                Interactive chat coming soon. Currently displaying randomly
+                sampled example research output.
               </p>
             </div>
           </form>
@@ -1147,7 +1199,9 @@ const AuthorsSection = () => (
                     <sup className="text-xs ml-0.5 text-primary">†</sup>
                   )}
                 </h3>
-                <p className="text-xs text-muted-foreground">{author.affiliation}</p>
+                <p className="text-xs text-muted-foreground">
+                  {author.affiliation}
+                </p>
               </div>
             </div>
           ))}
@@ -1267,7 +1321,7 @@ export default function Home() {
       setIsLoadingList(true);
       const examples = await listExamples();
       setExamplesList(examples);
-      
+
       // Set the first available example as selected
       if (examples.length > 0) {
         setSelectedExample(examples[0].json_file_name);
@@ -1301,7 +1355,7 @@ export default function Home() {
                 DR Tulu for Deep Research
               </h2>
               <div className="flex items-center gap-3">
-                <label className="text-sm font-medium">Select Example:</label>
+                <label className="text-sm font-medium">Select a Example:</label>
                 <Select
                   value={selectedExample}
                   onValueChange={setSelectedExample}
@@ -1311,23 +1365,25 @@ export default function Home() {
                     <SelectValue placeholder="Choose an example" />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(groupedExamples).map(([datasetName, examples]) => (
-                      <React.Fragment key={datasetName}>
-                        <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
-                          {datasetName}
-                        </div>
-                        {examples.map((example) => (
-                          <SelectItem 
-                            key={example.json_file_name} 
-                            value={example.json_file_name}
-                            className="pl-6"
-                          >
-                            {example.example_title.slice(0, 60)}
-                            {example.example_title.length > 60 ? "..." : ""}
-                          </SelectItem>
-                        ))}
-                      </React.Fragment>
-                    ))}
+                    {Object.entries(groupedExamples).map(
+                      ([datasetName, examples]) => (
+                        <React.Fragment key={datasetName}>
+                          <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+                            {datasetName}
+                          </div>
+                          {examples.map((example) => (
+                            <SelectItem
+                              key={example.json_file_name}
+                              value={example.json_file_name}
+                              className="pl-6"
+                            >
+                              {example.example_title.slice(0, 60)}
+                              {example.example_title.length > 60 ? "..." : ""}
+                            </SelectItem>
+                          ))}
+                        </React.Fragment>
+                      )
+                    )}
                   </SelectContent>
                 </Select>
                 {/* <TooltipProvider>
