@@ -59,7 +59,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const TITLE =
-  "DR Tulu: End-to-End Training for Long-Form Deep Research with Adaptive Rubrics";
+  "DR Tulu: Reinforcement Learning with Evolving Rubrics for Deep Research";
 
 const BASE_PATH = "";
 
