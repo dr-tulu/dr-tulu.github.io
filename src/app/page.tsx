@@ -2,7 +2,18 @@
 import Link from "next/link";
 import Image from "next/image";
 import React, { useState, useRef, useEffect } from "react";
-import { ArrowRightIcon, SendHorizontal, ChevronRight, ExternalLink, PanelLeftClose, PanelLeftOpen, Search, ArrowDownFromLine, ArrowUpFromLine } from "lucide-react";
+import {
+  ArrowRightIcon,
+  SendHorizontal,
+  ChevronRight,
+  ExternalLink,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Search,
+  ArrowDownFromLine,
+  ArrowUpFromLine,
+  Expand,
+} from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -47,9 +58,10 @@ import {
 } from "./components/page-header";
 import { cn } from "@/lib/utils";
 
-const TITLE = "DR Tulu: End-to-End Training for Long-Form Deep Research with Adaptive Rubrics";
+const TITLE =
+  "DR Tulu: End-to-End Training for Long-Form Deep Research with Adaptive Rubrics";
 
-const BASE_PATH = '';
+const BASE_PATH = "";
 
 const AUTHORS = [
   {
@@ -199,8 +211,8 @@ const parseCitationsWithTooltips = (
     const citedText = match[2];
     const citedSources = sources.filter((s) => citationIds.includes(s.id));
     const citationNumbers = citationIds
-      .map(id => sourceIdToNumber.get(id.trim()))
-      .filter(num => num !== undefined) as number[];
+      .map((id) => sourceIdToNumber.get(id.trim()))
+      .filter((num) => num !== undefined) as number[];
 
     // Create citation with tooltip
     parts.push(
@@ -245,7 +257,7 @@ const CitationTooltip = ({
           </span>
         </TooltipTrigger>
         <TooltipContent className="max-w-sm p-3" side="top">
-        <div className="space-y-2">
+          <div className="space-y-2">
             {sources.length > 0 ? (
               sources.map((source, index) => (
                 <div key={source.id} className="text-xs">
@@ -287,11 +299,13 @@ const SourcesCollapsible = ({ sources }: { sources: Source[] }) => {
   useEffect(() => {
     if (isOpen && contentRef.current) {
       setTimeout(() => {
-        const scrollContainer = contentRef.current?.closest('[data-radix-scroll-area-viewport]');
+        const scrollContainer = contentRef.current?.closest(
+          "[data-radix-scroll-area-viewport]"
+        );
         if (scrollContainer) {
-          scrollContainer.scrollBy({ 
+          scrollContainer.scrollBy({
             top: 60,
-            behavior: "auto"
+            behavior: "auto",
           });
         }
       }, 150);
@@ -302,10 +316,15 @@ const SourcesCollapsible = ({ sources }: { sources: Source[] }) => {
     <div className="px-2">
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-          <ChevronRight className={cn("h-3 w-3 transition-transform duration-200", isOpen && "rotate-90")} />
+          <ChevronRight
+            className={cn(
+              "h-3 w-3 transition-transform duration-200",
+              isOpen && "rotate-90"
+            )}
+          />
           <span>Sources ({sources.length})</span>
         </CollapsibleTrigger>
-        <CollapsibleContent 
+        <CollapsibleContent
           ref={contentRef}
           className="mt-2 animate-in slide-in-from-top-1 duration-200"
         >
@@ -339,19 +358,27 @@ type TraceSection = {
 
 const parseFullTraces = (generatedText: string): TraceSection[] => {
   const sections: TraceSection[] = [];
-  const toolCallRegex = /<call_tool name="([^"]+)"([^>]*)>([\s\S]*?)<\/call_tool>/g;
+  const toolCallRegex =
+    /<call_tool name="([^"]+)"([^>]*)>([\s\S]*?)<\/call_tool>/g;
   const toolOutputRegex = /<tool_output>([\s\S]*?)<\/tool_output>/g;
-  
+
   let lastIndex = 0;
-  const matches: Array<{type: "call" | "output", index: number, endIndex: number, content: string, name?: string, params?: Record<string, string>}> = [];
-  
+  const matches: Array<{
+    type: "call" | "output";
+    index: number;
+    endIndex: number;
+    content: string;
+    name?: string;
+    params?: Record<string, string>;
+  }> = [];
+
   // Find all tool calls
   let match;
   while ((match = toolCallRegex.exec(generatedText)) !== null) {
     const toolName = match[1];
     const paramsString = match[2];
     const content = match[3];
-    
+
     // Parse parameters
     const params: Record<string, string> = {};
     const paramRegex = /(\w+)="([^"]*)"/g;
@@ -359,17 +386,17 @@ const parseFullTraces = (generatedText: string): TraceSection[] => {
     while ((paramMatch = paramRegex.exec(paramsString)) !== null) {
       params[paramMatch[1]] = paramMatch[2];
     }
-    
+
     matches.push({
       type: "call",
       index: match.index,
       endIndex: match.index + match[0].length,
       content,
       name: toolName,
-      params
+      params,
     });
   }
-  
+
   // Find all tool outputs
   toolOutputRegex.lastIndex = 0;
   while ((match = toolOutputRegex.exec(generatedText)) !== null) {
@@ -377,13 +404,13 @@ const parseFullTraces = (generatedText: string): TraceSection[] => {
       type: "output",
       index: match.index,
       endIndex: match.index + match[0].length,
-      content: match[1]
+      content: match[1],
     });
   }
-  
+
   // Sort matches by index
   matches.sort((a, b) => a.index - b.index);
-  
+
   // Build sections
   matches.forEach((match) => {
     // Add text before this match
@@ -392,58 +419,73 @@ const parseFullTraces = (generatedText: string): TraceSection[] => {
       if (textContent) {
         sections.push({
           type: "text",
-          content: textContent
+          content: textContent,
         });
       }
     }
-    
+
     // Add the match itself
     if (match.type === "call") {
       sections.push({
         type: "tool_call",
         content: match.content.trim(),
         toolName: match.name,
-        toolParams: match.params
+        toolParams: match.params,
       });
     } else {
       sections.push({
         type: "tool_output",
-        content: match.content.trim()
+        content: match.content.trim(),
       });
     }
-    
+
     lastIndex = match.endIndex;
   });
-  
+
   // Add any remaining text
   if (lastIndex < generatedText.length) {
     const textContent = generatedText.slice(lastIndex).trim();
     if (textContent) {
       sections.push({
         type: "text",
-        content: textContent
+        content: textContent,
       });
     }
   }
-  
+
   return sections;
 };
 
 // Component to render a single trace section
-const TraceSection = ({ section, index }: { section: TraceSection; index: number }) => {
+const TraceSection = ({
+  section,
+  index,
+}: {
+  section: TraceSection;
+  index: number;
+}) => {
   const [isThinkingOpen, setIsThinkingOpen] = useState(false);
-  
+
   if (section.type === "text") {
-    const contentWithoutThinkTags = section.content.replace(/<\/?think>/g, '').trim();
+    const contentWithoutThinkTags = section.content
+      .replace(/<\/?think>/g, "")
+      .trim();
+    const contentTrimed = isThinkingOpen
+      ? contentWithoutThinkTags
+      : contentWithoutThinkTags.split(" ").slice(0, 20).join(" ") + "...";
     return (
-      <div className="bg-background rounded-md border overflow-hidden">
+      <div className="bg-background rounded-md border overflow-hidden border border-green-200 bg-green-50 hover:shadow-md hover:border-green-300 hover:bg-green-100">
         <Collapsible open={isThinkingOpen} onOpenChange={setIsThinkingOpen}>
-          <CollapsibleTrigger className="flex items-center justify-between p-4 w-full hover:bg-muted/50 transition-colors duration-200">
-            <span className="text-xs font-semibold text-muted-foreground">Thinking</span>
-            <div className={cn(
-              "transform transition-all duration-300 ease-in-out",
-              isThinkingOpen ? "rotate-0 scale-100" : "rotate-0 scale-100"
-            )}>
+          <CollapsibleTrigger className="flex items-center justify-between p-4 w-full hover:bg-muted/50 transition-colors duration-200 ">
+            <span className="text-xs font-semibold  text-green-700">
+              Thinking
+            </span>
+            <div
+              className={cn(
+                "transform transition-all duration-300 ease-in-out",
+                isThinkingOpen ? "rotate-0 scale-100" : "rotate-0 scale-100"
+              )}
+            >
               {isThinkingOpen ? (
                 <ArrowUpFromLine className="h-3.5 w-3.5 text-muted-foreground" />
               ) : (
@@ -451,18 +493,21 @@ const TraceSection = ({ section, index }: { section: TraceSection; index: number
               )}
             </div>
           </CollapsibleTrigger>
-          <CollapsibleContent className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-top-1 data-[state=open]:slide-in-from-top-1 duration-300">
-            <div className="px-4 pb-4 pt-1">
-              <p className="text-xs whitespace-pre-wrap font-mono leading-relaxed break-words">
-                {contentWithoutThinkTags}
-              </p>
-            </div>
-          </CollapsibleContent>
+          <div className="px-4 pb-4 pt-1">
+            <p
+              className={cn(
+                "text-xs whitespace-pre-wrap font-mono leading-relaxed break-words",
+                isThinkingOpen ? "" : "text-muted-foreground"
+              )}
+            >
+              {contentTrimed}
+            </p>
+          </div>
         </Collapsible>
       </div>
     );
   }
-  
+
   if (section.type === "tool_call") {
     return (
       <div className="bg-blue-50 p-4 rounded-md border border-blue-200 transition-all duration-200 hover:shadow-md hover:border-blue-300 hover:bg-blue-100 cursor-pointer">
@@ -471,46 +516,51 @@ const TraceSection = ({ section, index }: { section: TraceSection; index: number
             <span className="text-xs font-semibold text-blue-700">
               Tool Call: {section.toolName}
             </span>
-            {section.toolParams && Object.keys(section.toolParams).length > 0 && (
-              <div className="mt-1 space-y-0.5">
-                {Object.entries(section.toolParams).map(([key, value]) => (
-                  <div key={key} className="text-xs text-muted-foreground break-words min-w-0">
-                    <span className="font-medium">{key}:</span> {value}
-                  </div>
-                ))}
-              </div>
-            )}
+            {section.toolParams &&
+              Object.keys(section.toolParams).length > 0 && (
+                <div className="mt-1 space-y-0.5">
+                  {Object.entries(section.toolParams).map(([key, value]) => (
+                    <div
+                      key={key}
+                      className="text-xs font-mono text-muted-foreground break-words min-w-0"
+                    >
+                      <span className="">{key}:</span> {value}
+                    </div>
+                  ))}
+                </div>
+              )}
           </div>
           {/* <span className="text-xs text-muted-foreground bg-blue-100 px-2 py-0.5 rounded flex-shrink-0">
             #{index + 1}
           </span> */}
         </div>
-        <div className="max-h-48 overflow-y-auto overflow-x-hidden min-w-0">
-          <p className="text-xs whitespace-pre-wrap font-mono leading-relaxed text-muted-foreground mt-2 break-words min-w-0 max-w-full" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+        <div className="max-h-48 overflow-y-auto overflow-x-hidden min-w-0 font-mono text-xs">
+          <p style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>
             {section.content}
           </p>
         </div>
       </div>
     );
   }
-  
+
   if (section.type === "tool_output") {
     return (
-      <div className="bg-green-50 p-4 rounded-md border border-green-200 transition-all duration-200 hover:shadow-md hover:border-green-300 hover:bg-green-100 cursor-pointer">
+      <div className="border p-4 rounded-md transition-all duration-200 hover:shadow-md cursor-pointer">
         <div className="flex items-start gap-2 mb-2 min-w-0">
-          <span className="text-xs font-semibold text-green-700">
-            Tool Output
-          </span>
+          <span className="text-xs font-semibold">Tool Output</span>
         </div>
         <div className="max-h-48 overflow-y-auto overflow-x-hidden min-w-0">
-          <p className="text-xs whitespace-pre-wrap font-mono leading-relaxed text-muted-foreground break-words min-w-0 max-w-full" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+          <p
+            className="text-xs whitespace-pre-wrap font-mono leading-relaxed text-muted-foreground break-words min-w-0 max-w-full"
+            style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
+          >
             {section.content}
           </p>
         </div>
       </div>
     );
   }
-  
+
   return null;
 };
 
@@ -558,23 +608,23 @@ const SidePanel = ({
       <Tabs defaultValue="traces" className="flex flex-col h-full">
         <div className="p-4 border-b bg-background">
           <TabsList className="grid w-full grid-cols-2 transition-all">
-            <TabsTrigger 
+            <TabsTrigger
+              value="documents"
+              className="transition-all duration-300 data-[state=active]:scale-[1.02]"
+            >
+              Cited Docs
+            </TabsTrigger>
+            <TabsTrigger
               value="traces"
               className="transition-all duration-300 data-[state=active]:scale-[1.02]"
             >
               Full Traces
             </TabsTrigger>
-            <TabsTrigger 
-              value="documents"
-              className="transition-all duration-300 data-[state=active]:scale-[1.02]"
-            >
-              Documents
-            </TabsTrigger>
           </TabsList>
         </div>
 
-        <TabsContent 
-          value="traces" 
+        <TabsContent
+          value="traces"
           className="flex-1 overflow-hidden mt-0 data-[state=active]:animate-in data-[state=inactive]:animate-out data-[state=inactive]:fade-out-0 data-[state=active]:fade-in-0 data-[state=inactive]:slide-out-to-left-2 data-[state=active]:slide-in-from-right-2 duration-300"
         >
           <div className="p-4 border-b bg-background">
@@ -599,12 +649,17 @@ const SidePanel = ({
               <Input
                 placeholder="Search documents..."
                 value={searchQuery}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setSearchQuery(e.target.value)
+                }
                 className="pl-8 pr-32 h-9 text-xs"
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
                 {searchQuery ? (
-                  <span>Showing {filteredDocuments.length} of {documents.length} result{documents.length !== 1 ? "s" : ""}</span>
+                  <span>
+                    Showing {filteredDocuments.length} of {documents.length}{" "}
+                    result{documents.length !== 1 ? "s" : ""}
+                  </span>
                 ) : (
                   <span>{documents.length} retrieved</span>
                 )}
@@ -620,9 +675,13 @@ const SidePanel = ({
                     className="bg-background p-4 rounded-md border transition-all duration-200 hover:shadow-md hover:border-primary/30 hover:bg-muted/30 cursor-pointer"
                   >
                     <div className="flex items-start justify-between gap-2 mb-2">
-                      <h4 className="font-semibold text-sm flex-1">{doc.title}</h4>
+                      <h4 className="font-semibold text-sm flex-1">
+                        {doc.title}
+                      </h4>
                       <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                        #{docIdToCitationNumber.get(doc.id) || documents.indexOf(doc) + 1}
+                        #
+                        {docIdToCitationNumber.get(doc.id) ||
+                          documents.indexOf(doc) + 1}
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground mb-2">
@@ -671,21 +730,24 @@ const getCitedSnippetIds = (finalResponse: string): Set<string> => {
   const citedIds = new Set<string>();
   const regex = /<cite id="([^"]+)">/g;
   let match;
-  
+
   while ((match = regex.exec(finalResponse)) !== null) {
-    const ids = match[1].split(",").map(id => id.trim());
-    ids.forEach(id => citedIds.add(id));
+    const ids = match[1].split(",").map((id) => id.trim());
+    ids.forEach((id) => citedIds.add(id));
   }
-  
+
   return citedIds;
 };
 
 // Parse snippet blocks from generated_text
-const parseSnippetsFromGeneratedText = (generatedText: string): Map<string, Source> => {
+const parseSnippetsFromGeneratedText = (
+  generatedText: string
+): Map<string, Source> => {
   const snippetMap = new Map<string, Source>();
-  const snippetRegex = /<snippet id=([^\s>]+)>\s*Title:\s*([^\n]+)\s*URL:\s*([^\n]+)\s*Snippet:\s*([^<]+)<\/snippet>/g;
+  const snippetRegex =
+    /<snippet id=([^\s>]+)>\s*Title:\s*([^\n]+)\s*URL:\s*([^\n]+)\s*Snippet:\s*([^<]+)<\/snippet>/g;
   let match;
-  
+
   while ((match = snippetRegex.exec(generatedText)) !== null) {
     const [, id, title, url, snippet] = match;
     snippetMap.set(id.trim(), {
@@ -695,19 +757,21 @@ const parseSnippetsFromGeneratedText = (generatedText: string): Map<string, Sour
       snippet: snippet.trim(),
     });
   }
-  
+
   return snippetMap;
 };
 
 // Extract sources from example data - only include cited sources
 const extractSources = (data: ExampleData): Source[] => {
   const citedIds = getCitedSnippetIds(data.final_response);
-  const snippetMap = parseSnippetsFromGeneratedText(data.full_traces.generated_text);
-  
+  const snippetMap = parseSnippetsFromGeneratedText(
+    data.full_traces.generated_text
+  );
+
   const sources: Source[] = [];
-  
+
   // Only include sources that are actually cited
-  citedIds.forEach(id => {
+  citedIds.forEach((id) => {
     const snippet = snippetMap.get(id);
     if (snippet) {
       sources.push(snippet);
@@ -721,14 +785,14 @@ const extractSources = (data: ExampleData): Source[] => {
 const extractDocuments = (data: ExampleData): Document[] => {
   const citedIds = getCitedSnippetIds(data.final_response);
   const documents: Document[] = [];
-  
+
   if (data.full_traces.tool_calls) {
     data.full_traces.tool_calls.forEach((toolCall) => {
       if (toolCall.documents) {
         toolCall.documents.forEach((doc, index) => {
           // Create snippet ID in the format: call_id-index (e.g., "fb888718-0")
           const snippetId = `${toolCall.call_id}-${index}`;
-          
+
           // Only include documents that are actually cited in the response
           if (citedIds.has(snippetId)) {
             documents.push({
@@ -744,7 +808,7 @@ const extractDocuments = (data: ExampleData): Document[] => {
       }
     });
   }
-  
+
   return documents;
 };
 
@@ -776,7 +840,15 @@ const convertExampleToMessages = (data: ExampleData): Message[] => {
   ];
 };
 
-const ChatInterface = ({ selectedExample, isPanelOpen, onPanelToggle }: { selectedExample: string; isPanelOpen: boolean; onPanelToggle: () => void }) => {
+const ChatInterface = ({
+  selectedExample,
+  isPanelOpen,
+  onPanelToggle,
+}: {
+  selectedExample: string;
+  isPanelOpen: boolean;
+  onPanelToggle: () => void;
+}) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -816,10 +888,12 @@ const ChatInterface = ({ selectedExample, isPanelOpen, onPanelToggle }: { select
       isInitialLoadRef.current = false;
       return;
     }
-    
+
     // Auto-scroll to bottom when new messages arrive (but not on initial load)
     if (scrollAreaRef.current && !isInitialLoadRef.current) {
-      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      const scrollContainer = scrollAreaRef.current.querySelector(
+        "[data-radix-scroll-area-viewport]"
+      );
       if (scrollContainer) {
         scrollContainer.scrollTop = scrollContainer.scrollHeight;
       }
@@ -846,7 +920,9 @@ const ChatInterface = ({ selectedExample, isPanelOpen, onPanelToggle }: { select
             <div className="space-y-4">
               {isLoading ? (
                 <div className="flex items-center justify-center h-full">
-                  <div className="text-muted-foreground">Loading example...</div>
+                  <div className="text-muted-foreground">
+                    Loading example...
+                  </div>
                 </div>
               ) : (
                 messages.map((message) => (
@@ -859,7 +935,10 @@ const ChatInterface = ({ selectedExample, isPanelOpen, onPanelToggle }: { select
                   >
                     {message.role === "assistant" && (
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={`${BASE_PATH}/images/logo.png`} alt="DR Tulu" />
+                        <AvatarImage
+                          src={`${BASE_PATH}/images/logo.png`}
+                          alt="DR Tulu"
+                        />
                         <AvatarFallback className="bg-primary text-primary-foreground">
                           DT
                         </AvatarFallback>
@@ -876,13 +955,19 @@ const ChatInterface = ({ selectedExample, isPanelOpen, onPanelToggle }: { select
                       >
                         <div className="text-sm whitespace-pre-wrap leading-relaxed">
                           {message.role === "assistant" && message.sources
-                            ? parseCitationsWithTooltips(message.content, message.sources)
+                            ? parseCitationsWithTooltips(
+                                message.content,
+                                message.sources
+                              )
                             : message.content}
                         </div>
                       </div>
-                      {message.role === "assistant" && message.sources && message.sources.length > 0 && (
-                        <SourcesCollapsible sources={message.sources} />
-                      )}
+
+                      {/*message.role === "assistant" &&
+                        message.sources &&
+                        message.sources.length > 0 && (
+                          <SourcesCollapsible sources={message.sources} />
+                        )*/}
                     </div>
                     {message.role === "user" && (
                       <Avatar className="h-8 w-8">
@@ -895,7 +980,10 @@ const ChatInterface = ({ selectedExample, isPanelOpen, onPanelToggle }: { select
             </div>
           </ScrollArea>
 
-          <form onSubmit={handleSubmit} className="p-4 pl-8 border-t bg-muted/10">
+          <form
+            onSubmit={handleSubmit}
+            className="p-4 pl-8 border-t bg-muted/10"
+          >
             <div className="relative">
               <Textarea
                 ref={textareaRef}
@@ -918,7 +1006,8 @@ const ChatInterface = ({ selectedExample, isPanelOpen, onPanelToggle }: { select
             </div>
             <div className="flex pl-2 mt-2">
               <p className="text-xs text-muted-foreground/60">
-                Interactive chat coming soon. Currently displaying example research output.
+                Interactive chat coming soon. Currently displaying example
+                research output.
               </p>
             </div>
           </form>
@@ -929,9 +1018,9 @@ const ChatInterface = ({ selectedExample, isPanelOpen, onPanelToggle }: { select
       {messages.length > 0 && messages[1]?.fullTraces && (
         <>
           <ResizableHandle withHandle className="w-0" />
-          <ResizablePanel 
+          <ResizablePanel
             ref={panelRef}
-            defaultSize={35} 
+            defaultSize={35}
             minSize={20}
             maxSize={60}
             collapsible
@@ -992,11 +1081,12 @@ const MobileView = () => (
       <div className="mb-6">
         <h1 className="text-2xl font-bold tracking-tight mb-2">{TITLE}</h1>
         <p className="text-sm text-muted-foreground mb-4">
-          For the best experience, please visit this demo on a desktop or tablet device.
+          For the best experience, please visit this demo on a desktop or tablet
+          device.
         </p>
       </div>
       <div className="rounded-lg border bg-background shadow-lg overflow-hidden">
-        <Image 
+        <Image
           src="/images/demo.png"
           alt="DR Tulu Demo Screenshot"
           width={1200}
@@ -1033,11 +1123,11 @@ export default function Home() {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener("resize", checkMobile);
+
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   if (isMobile) {
@@ -1051,15 +1141,23 @@ export default function Home() {
         <div className="mt-8 rounded-[0.5rem] border bg-background shadow overflow-hidden">
           <div className="px-0 pt-6 pb-0">
             <div className="mr-6 ml-8 flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">DR Tulu for Deep Research</h2>
+              <h2 className="text-lg font-semibold">
+                DR Tulu for Deep Research
+              </h2>
               <div className="flex items-center gap-3">
                 <label className="text-sm font-medium">Select Example:</label>
-                <Select value={selectedExample} onValueChange={setSelectedExample} disabled>
+                <Select
+                  value={selectedExample}
+                  onValueChange={setSelectedExample}
+                  disabled
+                >
                   <SelectTrigger className="w-64">
                     <SelectValue placeholder="Choose an example" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="example">Example 1: Feather Hydrolysate Research</SelectItem>
+                    <SelectItem value="example">
+                      Example 1: Feather Hydrolysate Research
+                    </SelectItem>
                   </SelectContent>
                 </Select>
                 {/* <TooltipProvider>
@@ -1086,9 +1184,9 @@ export default function Home() {
               </div>
             </div>
             <Separator className="mt-2" />
-            <ChatInterface 
-              selectedExample={selectedExample} 
-              isPanelOpen={isPanelOpen} 
+            <ChatInterface
+              selectedExample={selectedExample}
+              isPanelOpen={isPanelOpen}
               onPanelToggle={() => setIsPanelOpen(!isPanelOpen)}
             />
           </div>
