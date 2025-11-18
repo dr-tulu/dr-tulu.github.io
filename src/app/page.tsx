@@ -55,7 +55,7 @@ import {
   PageHeader,
   PageHeaderDescription,
   PageHeaderHeading,
-} from "./components/page-header";
+} from "@/app/components/page-header";
 import { cn } from "@/lib/utils";
 
 const TITLE =
@@ -176,6 +176,12 @@ type ExampleData = {
       }>;
     }>;
   };
+};
+
+type ExampleListItem = {
+  dataset_name: string;
+  example_title: string;
+  json_file_name: string;
 };
 
 // Utility: Parse citations in text and return React elements with tooltips
@@ -459,6 +465,7 @@ const TraceSection = ({
 }) => {
   const [isThinkingOpen, setIsThinkingOpen] = useState(false);
   const [isToolCallOpen, setIsToolCallOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   if (section.type === "text") {
     const contentWithoutThinkTags = section.content
@@ -468,7 +475,7 @@ const TraceSection = ({
       ? contentWithoutThinkTags
       : contentWithoutThinkTags.split(" ").slice(0, 30).join(" ") + "...";
     return (
-      <div className="bg-background rounded-md overflow-hidden border border-green-200 bg-green-50 hover:shadow-md hover:border-green-300 hover:bg-green-100">
+      <div className="bg-green-50 rounded-md border border-green-200 overflow-hidden hover:shadow-md hover:border-green-300 hover:bg-green-100">
         <Collapsible open={isThinkingOpen} onOpenChange={setIsThinkingOpen}>
           <CollapsibleTrigger className="flex items-center justify-between p-4 w-full hover:bg-muted/50 transition-colors duration-200 ">
             <span className="text-xs font-semibold  text-green-700">
@@ -722,11 +729,21 @@ const SidePanel = ({
   );
 };
 
-// Load example JSON
-const loadExampleData = async (): Promise<ExampleData | null> => {
-  const response = await fetch(`${BASE_PATH}/example.json`);
+// List available examples
+const listExamples = async (): Promise<ExampleListItem[]> => {
+  const response = await fetch(`${BASE_PATH}/example-list.json`);
   if (!response.ok) {
-    console.error("Failed to load example.json");
+    console.error("Failed to load example-list.json");
+    return [];
+  }
+  return response.json();
+};
+
+// Load example JSON
+const loadExampleData = async (jsonFileName: string): Promise<ExampleData | null> => {
+  const response = await fetch(`${BASE_PATH}/${jsonFileName}`);
+  if (!response.ok) {
+    console.error(`Failed to load ${jsonFileName}`);
     return null;
   }
   return response.json();
@@ -751,17 +768,30 @@ const parseSnippetsFromGeneratedText = (
   generatedText: string
 ): Map<string, Source> => {
   const snippetMap = new Map<string, Source>();
-  const snippetRegex =
-    /<snippet id=([^\s>]+)>\s*Title:\s*([^\n]+)\s*URL:\s*([^\n]+)\s*Snippet:\s*([^<]+)<\/snippet>/g;
-  let match;
-
-  while ((match = snippetRegex.exec(generatedText)) !== null) {
-    const [, id, title, url, snippet] = match;
-    snippetMap.set(id.trim(), {
-      id: id.trim(),
-      title: title.trim(),
-      url: url.trim(),
-      snippet: snippet.trim(),
+  
+  // Step 1: Find all <snippet id=xxx>...</snippet> blocks
+  const snippetBlockRegex = /<snippet id=([^\s>]+)>([\s\S]*?)<\/snippet>/g;
+  let blockMatch;
+  
+  while ((blockMatch = snippetBlockRegex.exec(generatedText)) !== null) {
+    const id = blockMatch[1].trim();
+    const content = blockMatch[2];
+    
+    // Step 2: Extract fields from the content
+    // Match lines that start with "Title:", "URL:", "Snippet:"
+    const titleMatch = content.match(/^\s*Title:\s*(.+)$/m);
+    const urlMatch = content.match(/^\s*URL:\s*(.+)$/m);
+    const snippetMatch = content.match(/^\s*Snippet:\s*([\s\S]+?)(?=^\s*(?:Title:|URL:|Snippet:|$))/m);
+    
+    const title = titleMatch ? titleMatch[1].trim() : "";
+    const url = urlMatch ? urlMatch[1].trim() : "";
+    const snippet = snippetMatch ? snippetMatch[1].trim() : content.trim();
+    
+    snippetMap.set(id, {
+      id,
+      title,
+      url,
+      snippet,
     });
   }
 
@@ -868,7 +898,7 @@ const ChatInterface = ({
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
-      const data = await loadExampleData();
+      const data = await loadExampleData(selectedExample);
       if (data) {
         const msgs = convertExampleToMessages(data);
         setMessages(msgs);
@@ -1169,9 +1199,11 @@ const MobileView = () => (
 );
 
 export default function Home() {
-  const [selectedExample, setSelectedExample] = useState<string>("example");
+  const [selectedExample, setSelectedExample] = useState<string>("");
   const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
   const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [examplesList, setExamplesList] = useState<ExampleListItem[]>([]);
+  const [isLoadingList, setIsLoadingList] = useState<boolean>(true);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -1183,6 +1215,31 @@ export default function Home() {
 
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
+
+  // Load available examples on mount
+  useEffect(() => {
+    const loadExamplesList = async () => {
+      setIsLoadingList(true);
+      const examples = await listExamples();
+      setExamplesList(examples);
+      
+      // Set the first available example as selected
+      if (examples.length > 0) {
+        setSelectedExample(examples[0].json_file_name);
+      }
+      setIsLoadingList(false);
+    };
+    loadExamplesList();
+  }, []);
+
+  // Group examples by dataset
+  const groupedExamples = examplesList.reduce((acc, example) => {
+    if (!acc[example.dataset_name]) {
+      acc[example.dataset_name] = [];
+    }
+    acc[example.dataset_name].push(example);
+    return acc;
+  }, {} as Record<string, ExampleListItem[]>);
 
   if (isMobile) {
     return <MobileView />;
@@ -1203,15 +1260,29 @@ export default function Home() {
                 <Select
                   value={selectedExample}
                   onValueChange={setSelectedExample}
-                  disabled
+                  disabled={isLoadingList || examplesList.length === 0}
                 >
-                  <SelectTrigger className="w-64">
+                  <SelectTrigger className="w-96">
                     <SelectValue placeholder="Choose an example" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="example">
-                      Example 1: Feather Hydrolysate Research
-                    </SelectItem>
+                    {Object.entries(groupedExamples).map(([datasetName, examples]) => (
+                      <React.Fragment key={datasetName}>
+                        <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+                          {datasetName}
+                        </div>
+                        {examples.map((example) => (
+                          <SelectItem 
+                            key={example.json_file_name} 
+                            value={example.json_file_name}
+                            className="pl-6"
+                          >
+                            {example.example_title.slice(0, 60)}
+                            {example.example_title.length > 60 ? "..." : ""}
+                          </SelectItem>
+                        ))}
+                      </React.Fragment>
+                    ))}
                   </SelectContent>
                 </Select>
                 {/* <TooltipProvider>
@@ -1238,11 +1309,13 @@ export default function Home() {
               </div>
             </div>
             <Separator className="mt-2" />
-            <ChatInterface
-              selectedExample={selectedExample}
-              isPanelOpen={isPanelOpen}
-              onPanelToggle={() => setIsPanelOpen(!isPanelOpen)}
-            />
+            {selectedExample && (
+              <ChatInterface
+                selectedExample={selectedExample}
+                isPanelOpen={isPanelOpen}
+                onPanelToggle={() => setIsPanelOpen(!isPanelOpen)}
+              />
+            )}
           </div>
         </div>
       </div>
