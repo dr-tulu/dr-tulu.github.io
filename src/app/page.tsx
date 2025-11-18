@@ -1004,6 +1004,7 @@ const ChatInterface = ({
   const [showAssistantLoading, setShowAssistantLoading] = useState(false);
   const [visibleTraceIndex, setVisibleTraceIndex] = useState(-1);
   const [showFinalResponse, setShowFinalResponse] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const panelRef = useRef<any>(null);
@@ -1011,13 +1012,14 @@ const ChatInterface = ({
   const fullMessagesRef = useRef<Message[]>([]);
   const traceSectionsRef = useRef<TraceSection[]>([]);
 
-  // Load example data on mount with progressive animation
+  // Load example data when example is selected
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
       setShowAssistantLoading(false);
       setVisibleTraceIndex(-1);
       setShowFinalResponse(false);
+      setHasSubmitted(false);
       
       const data = await loadExampleData(selectedExample);
       if (data) {
@@ -1029,39 +1031,12 @@ const ChatInterface = ({
           traceSectionsRef.current = parseFullTraces(msgs[1].fullTraces.generated_text);
         }
         
-        // Step 1: Show user message
-        setMessages([msgs[0]]);
-        setIsLoading(false);
+        // Set the input to the user's question
+        setInput(msgs[0].content);
         
-        // Step 2: Show assistant loading after 600ms
-        setTimeout(() => {
-          setShowAssistantLoading(true);
-          
-          // Step 3: Progressively show trace sections
-          const totalSections = traceSectionsRef.current.length;
-          let currentIndex = 0;
-          
-          const showNextTrace = () => {
-            if (currentIndex < totalSections) {
-              setVisibleTraceIndex(currentIndex);
-              currentIndex++;
-              // Vary delay based on section type for more natural feel - slower pacing
-              const section = traceSectionsRef.current[currentIndex - 1];
-              const delay = section.type === "text" ? 600 : section.type === "tool_call" ? 800 : 500;
-              setTimeout(showNextTrace, delay);
-            } else {
-              // Step 4: Show final response after all traces
-              setTimeout(() => {
-                setShowAssistantLoading(false);
-                setShowFinalResponse(true);
-                setMessages(msgs);
-              }, 800);
-            }
-          };
-          
-          // Start showing traces after a brief delay
-          setTimeout(showNextTrace, 800);
-        }, 600);
+        // Clear messages - wait for user to submit
+        setMessages([]);
+        setIsLoading(false);
       } else {
         setIsLoading(false);
       }
@@ -1101,7 +1076,46 @@ const ChatInterface = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Disabled for now - will be enabled later
+    
+    if (!input.trim() || hasSubmitted || fullMessagesRef.current.length === 0) {
+      return;
+    }
+    
+    setHasSubmitted(true);
+    const msgs = fullMessagesRef.current;
+    
+    // Step 1: Show user message
+    setMessages([msgs[0]]);
+    
+    // Step 2: Show assistant loading after 600ms
+    setTimeout(() => {
+      setShowAssistantLoading(true);
+      
+      // Step 3: Progressively show trace sections
+      const totalSections = traceSectionsRef.current.length;
+      let currentIndex = 0;
+      
+      const showNextTrace = () => {
+        if (currentIndex < totalSections) {
+          setVisibleTraceIndex(currentIndex);
+          currentIndex++;
+          // Vary delay based on section type for more natural feel - slower pacing
+          const section = traceSectionsRef.current[currentIndex - 1];
+          const delay = section.type === "text" ? 600 : section.type === "tool_call" ? 800 : 500;
+          setTimeout(showNextTrace, delay);
+        } else {
+          // Step 4: Show final response after all traces
+          setTimeout(() => {
+            setShowAssistantLoading(false);
+            setShowFinalResponse(true);
+            setMessages(msgs);
+          }, 800);
+        }
+      };
+      
+      // Start showing traces after a brief delay
+      setTimeout(showNextTrace, 800);
+    }, 600);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -1234,8 +1248,9 @@ const ChatInterface = ({
             </div>
             {/* <div className="flex pl-2 mt-2">
               <p className="text-xs text-muted-foreground/60">
-                Interactive chat coming soon. Currently displaying randomly
-                sampled example research output.
+                {hasSubmitted 
+                  ? "" 
+                  : "Select an example above and press Enter or click Send to see the research process."}
               </p>
             </div> */}
           </form>
