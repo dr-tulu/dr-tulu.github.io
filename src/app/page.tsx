@@ -517,88 +517,61 @@ const TraceSection = ({
   }
 
   if (section.type === "tool_call") {
-    const contentPreview = section.content.slice(0, 150) + 
-      (section.content.length > 150 ? "..." : "");
-    
     return (
-      <div className="bg-blue-50 rounded-md border border-blue-200 overflow-hidden transition-all duration-200 hover:shadow-md hover:border-blue-300 hover:bg-blue-100">
-        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-          <CollapsibleTrigger className="flex items-center justify-between p-4 w-full hover:bg-blue-100/50 transition-colors duration-200">
-            <div className="flex-1 min-w-0">
-              <span className="text-xs font-semibold text-blue-700">
-                Tool Call: {section.toolName}
-              </span>
-              {section.toolParams &&
-                Object.keys(section.toolParams).length > 0 && (
-                  <div className="mt-1 space-y-0.5">
-                    {Object.entries(section.toolParams).map(([key, value]) => (
-                      <div
-                        key={key}
-                        className="text-xs font-mono text-muted-foreground break-words"
-                      >
-                        <span className="text-blue-600">{key}:</span> {value}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              {!isOpen && (
-                <p className="text-xs text-muted-foreground mt-1 font-mono line-clamp-2">
-                  {contentPreview}
-                </p>
+      <div className="bg-blue-50 p-4 rounded-md border border-blue-200 transition-all duration-200 hover:shadow-md hover:border-blue-300 hover:bg-blue-100 cursor-pointer">
+        <div className="flex items-start justify-between gap-2 mb-2 min-w-0">
+          <div className="flex-1 min-w-0">
+            <span className="text-xs font-semibold text-blue-700">
+              Tool Call: {section.toolName}
+            </span>
+            {section.toolParams &&
+              Object.keys(section.toolParams).length > 0 && (
+                <div className="mt-1 space-y-0.5">
+                  {Object.entries(section.toolParams).map(([key, value]) => (
+                    <div
+                      key={key}
+                      className="text-xs font-mono text-muted-foreground break-words min-w-0"
+                    >
+                      <span className="">{key}:</span> {value}
+                    </div>
+                  ))}
+                </div>
               )}
-            </div>
-            <div className="ml-2 flex-shrink-0">
-              {isOpen ? (
-                <ArrowUpFromLine className="h-3.5 w-3.5 text-blue-600" />
-              ) : (
-                <ArrowDownFromLine className="h-3.5 w-3.5 text-blue-600" />
-              )}
-            </div>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="px-4 pb-4 border-t border-blue-200">
-              <div className="max-h-96 overflow-y-auto pt-3">
-                <p className="text-xs whitespace-pre-wrap font-mono leading-relaxed break-words"
-                   style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>
-                  {section.content}
-                </p>
-              </div>
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
+          </div>
+          {/* <span className="text-xs text-muted-foreground bg-blue-100 px-2 py-0.5 rounded flex-shrink-0">
+            #{index + 1}
+          </span> */}
+        </div>
+        <div className="max-h-48 overflow-y-auto overflow-x-hidden min-w-0 font-mono text-xs">
+          <p style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>
+            {section.content}
+          </p>
+        </div>
       </div>
     );
   }
 
   if (section.type === "tool_output") {
-    const contentPreview = section.content.slice(0, 150) + 
-      (section.content.length > 150 ? "..." : "");
-    
     return (
-      <div className="bg-gray-50 rounded-md border border-gray-200 overflow-hidden hover:shadow-md hover:border-gray-300 transition-all duration-200">
+      <div className="bg-background rounded-md overflow-hidden border  hover:shadow-md">
         <Collapsible open={isToolCallOpen} onOpenChange={setIsToolCallOpen}>
-          <CollapsibleTrigger className="flex items-center justify-between p-4 w-full hover:bg-gray-100/50 transition-colors duration-200">
-            <div className="flex-1">
-              <span className="text-xs font-semibold text-gray-700">Tool Output</span>
-              {!isToolCallOpen && (
-                <p className="text-xs text-muted-foreground mt-1 font-mono line-clamp-2">
-                  {contentPreview}
-                </p>
-              )}
-            </div>
-            <div className="ml-2 flex-shrink-0">
+          <CollapsibleTrigger className="flex items-center justify-between p-4 w-full hover:bg-muted/50 transition-colors duration-200 ">
+            <span className="text-xs font-semibold">Tool Output</span>
+            <div className="transform transition-all duration-300 ease-in-out">
               {isToolCallOpen ? (
-                <ArrowUpFromLine className="h-3.5 w-3.5 text-gray-600" />
+                <ArrowUpFromLine className="h-3.5 w-3.5 text-muted-foreground" />
               ) : (
-                <ArrowDownFromLine className="h-3.5 w-3.5 text-gray-600" />
+                <ArrowDownFromLine className="h-3.5 w-3.5 text-muted-foreground" />
               )}
             </div>
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <div className="px-4 pb-4 border-t border-gray-200">
-              <div className="max-h-96 overflow-y-auto pt-3">
-                <p className="text-xs whitespace-pre-wrap font-mono leading-relaxed text-muted-foreground break-words"
-                   style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>
+            <div className="px-4 pb-4 pt-1">
+              <div className="max-h-48 overflow-y-auto overflow-x-hidden min-w-0">
+                <p
+                  className="text-xs whitespace-pre-wrap font-mono leading-relaxed text-muted-foreground break-words min-w-0 max-w-full"
+                  style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
+                >
                   {section.content}
                 </p>
               </div>
