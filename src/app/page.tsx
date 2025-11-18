@@ -465,6 +465,7 @@ const TraceSection = ({
   index: number;
 }) => {
   const [isThinkingOpen, setIsThinkingOpen] = useState(false);
+  const [isToolCallOpen, setIsToolCallOpen] = useState(false);
 
   if (section.type === "text") {
     const contentWithoutThinkTags = section.content
@@ -472,7 +473,7 @@ const TraceSection = ({
       .trim();
     const contentTrimed = isThinkingOpen
       ? contentWithoutThinkTags
-      : contentWithoutThinkTags.split(" ").slice(0, 20).join(" ") + "...";
+      : contentWithoutThinkTags.split(" ").slice(0, 30).join(" ") + "...";
     return (
       <div className="bg-background rounded-md border overflow-hidden border border-green-200 bg-green-50 hover:shadow-md hover:border-green-300 hover:bg-green-100">
         <Collapsible open={isThinkingOpen} onOpenChange={setIsThinkingOpen}>
@@ -545,18 +546,29 @@ const TraceSection = ({
 
   if (section.type === "tool_output") {
     return (
-      <div className="border p-4 rounded-md transition-all duration-200 hover:shadow-md cursor-pointer">
-        <div className="flex items-start gap-2 mb-2 min-w-0">
-          <span className="text-xs font-semibold">Tool Output</span>
-        </div>
-        <div className="max-h-48 overflow-y-auto overflow-x-hidden min-w-0">
-          <p
-            className="text-xs whitespace-pre-wrap font-mono leading-relaxed text-muted-foreground break-words min-w-0 max-w-full"
-            style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
-          >
-            {section.content}
-          </p>
-        </div>
+      <div className="bg-background rounded-md border overflow-hidden border  hover:shadow-md">
+        <Collapsible open={isToolCallOpen} onOpenChange={setIsToolCallOpen}>
+          <CollapsibleTrigger className="flex items-center justify-between p-4 w-full hover:bg-muted/50 transition-colors duration-200 ">
+            <span className="text-xs font-semibold">Tool Output</span>
+            <div className="transform transition-all duration-300 ease-in-out">
+              {isToolCallOpen ? (
+                <ArrowUpFromLine className="h-3.5 w-3.5 text-muted-foreground" />
+              ) : (
+                <ArrowDownFromLine className="h-3.5 w-3.5 text-muted-foreground" />
+              )}
+            </div>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="max-h-48 overflow-y-auto overflow-x-hidden min-w-0">
+              <p
+                className="text-xs whitespace-pre-wrap font-mono leading-relaxed text-muted-foreground break-words min-w-0 max-w-full"
+                style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
+              >
+                {section.content}
+              </p>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
     );
   }
