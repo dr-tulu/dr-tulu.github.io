@@ -63,51 +63,38 @@ const TITLE =
 
 const BASE_PATH = "";
 
-const AUTHORS = [
-  {
-    name: "Dr Tulu Authors",
-    affiliation: "Ai2 and others",
-    email: "dr.tulu@gmail.com",
-    website: "https://dr-tulu.github.io/",
-    avatar: `${BASE_PATH}/images/logo.png`,
-  },
+const FULL_AUTHORS = [
+  { name: "Rulin Shao", affiliation: "University of Washington", isFirstAuthor: true, isCoreContributor: true },
+  { name: "Akari Asai", affiliation: "Allen Institute for AI, Carnegie Mellon University", isFirstAuthor: true, isCoreContributor: true },
+  { name: "Shannon Zejiang Shen", affiliation: "Massachusetts Institute of Technology", isFirstAuthor: true, isCoreContributor: true },
+  { name: "Hamish Ivison", affiliation: "University of Washington, Allen Institute for AI", isFirstAuthor: true, isCoreContributor: true },
+  { name: "Varsha Kishore", affiliation: "University of Washington, Allen Institute for AI", isCoreContributor: true },
+  { name: "Jingming Zhuo", affiliation: "University of Washington", isCoreContributor: true },
+  { name: "Xinran Zhao", affiliation: "Carnegie Mellon University" },
+  { name: "Molly Park", affiliation: "University of Washington" },
+  { name: "Samuel Finlayson", affiliation: "University of Washington, Seattle Children's Hospital" },
+  { name: "David Sontag", affiliation: "Massachusetts Institute of Technology" },
+  { name: "Tyler Murray", affiliation: "Allen Institute for AI" },
+  { name: "Sewon Min", affiliation: "Allen Institute for AI, University of California, Berkeley" },
+  { name: "Pradeep Dasigi", affiliation: "Allen Institute for AI" },
+  { name: "Luca Soldaini", affiliation: "Allen Institute for AI" },
+  { name: "Faeze Brahman", affiliation: "Allen Institute for AI" },
+  { name: "Wen-tau Yih", affiliation: "University of Washington" },
+  { name: "Tongshuang Wu", affiliation: "Carnegie Mellon University" },
+  { name: "Luke Zettlemoyer", affiliation: "University of Washington" },
+  { name: "Yoon Kim", affiliation: "Massachusetts Institute of Technology" },
+  { name: "Hannaneh Hajishirzi", affiliation: "University of Washington, Allen Institute for AI" },
+  { name: "Pang Wei Koh", affiliation: "University of Washington, Allen Institute for AI" },
 ];
 
 const PAPER_URL = "https://arxiv.org/";
 
-const AuthorHoverCard = (author: (typeof AUTHORS)[0]) => (
-  <HoverCard openDelay={100} closeDelay={100}>
-    <HoverCardTrigger className="pr-4" style={{ marginLeft: 0 }}>
-      <Button
-        className="px-0"
-        variant="link"
-        onClick={() => {
-          open(author.website, "_blank");
-        }}
-      >
-        {author.name}
-      </Button>
-    </HoverCardTrigger>
-    <HoverCardContent>
-      <div className="flex justify-between">
-        <Avatar className="mr-4">
-          <AvatarImage src={author.avatar} />
-          <AvatarFallback>{author.name[0]}</AvatarFallback>
-        </Avatar>
-        <div className="space-y-1">
-          <h4 className="text-sm font-semibold">{author.name}</h4>
-          <p className="text-sm">{author.affiliation}</p>
-          <div className="flex items-center pt-2 overflow-wrap break-words">
-            <strong>Email: </strong>{" "}
-            <Link className="pl-0.5" href={`mailto:${author.email}`}>
-              {author.email}
-            </Link>
-          </div>
-        </div>
-      </div>
-    </HoverCardContent>
-  </HoverCard>
-);
+const scrollToAuthors = () => {
+  const authorsSection = document.getElementById("authors-section");
+  if (authorsSection) {
+    authorsSection.scrollIntoView({ behavior: "smooth" });
+  }
+};
 
 const Headline = () => (
   <PageHeader className="page-header pb-2 pt-0">
@@ -124,10 +111,16 @@ const Headline = () => (
       An advanced AI assistant for long-form deep research with adaptive evaluation rubrics.
     </PageHeaderDescription> */}
     <Separator className="mb-0.25 mt-2" />
-    <div className="flex flex-wrap justify-start items-start align-start space-x-4">
-      {AUTHORS.map((author, index) => (
-        <React.Fragment key={index}>{AuthorHoverCard(author)}</React.Fragment>
-      ))}
+    <div className="flex items-center gap-2">
+      <span className="text-sm text-muted-foreground">DR Tulu Authors</span>
+      <Button
+        variant="link"
+        className="px-0 text-sm inline-flex items-center gap-1 hover:gap-2 transition-all"
+        onClick={scrollToAuthors}
+      >
+        See full author list below
+        <ArrowRightIcon className="h-3 w-3" />
+      </Button>
     </div>
   </PageHeader>
 );
@@ -475,7 +468,7 @@ const TraceSection = ({
       ? contentWithoutThinkTags
       : contentWithoutThinkTags.split(" ").slice(0, 30).join(" ") + "...";
     return (
-      <div className="bg-background rounded-md border overflow-hidden border border-green-200 bg-green-50 hover:shadow-md hover:border-green-300 hover:bg-green-100">
+      <div className="bg-background rounded-md overflow-hidden border border-green-200 bg-green-50 hover:shadow-md hover:border-green-300 hover:bg-green-100">
         <Collapsible open={isThinkingOpen} onOpenChange={setIsThinkingOpen}>
           <CollapsibleTrigger className="flex items-center justify-between p-4 w-full hover:bg-muted/50 transition-colors duration-200 ">
             <span className="text-xs font-semibold  text-green-700">
@@ -1053,8 +1046,55 @@ const ChatInterface = ({
   );
 };
 
+const AuthorsSection = () => (
+  <section id="authors-section" className="mt-16 py-12 bg-muted/10">
+    <div className="container px-16">
+      <div className="space-y-6">
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl font-semibold tracking-tight">Authors</h2>
+          <p className="text-sm text-muted-foreground">
+            ♡ Joint first authors, † Core contributors
+          </p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {FULL_AUTHORS.map((author, index) => (
+            <div
+              key={index}
+              className="bg-background rounded-lg border p-4 hover:shadow-md transition-all duration-200 hover:border-primary/30"
+            >
+              <div className="space-y-1">
+                <h3 className="font-medium text-sm">
+                  {author.name}
+                  {author.isFirstAuthor && author.isCoreContributor && (
+                    <sup className="text-xs ml-0.5 text-primary">♡†</sup>
+                  )}
+                  {!author.isFirstAuthor && author.isCoreContributor && (
+                    <sup className="text-xs ml-0.5 text-primary">†</sup>
+                  )}
+                </h3>
+                <p className="text-xs text-muted-foreground">{author.affiliation}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="text-center">
+          <Link
+            href={PAPER_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
+          >
+            See full author contributions in paper
+            <ExternalLink className="h-3 w-3" />
+          </Link>
+        </div>
+      </div>
+    </div>
+  </section>
+);
+
 const Footer = () => (
-  <footer className="mt-16 border-t bg-muted/20">
+  <footer className="border-t bg-muted/20">
     <div className="container py-6 px-16">
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="text-sm text-muted-foreground">
@@ -1206,6 +1246,7 @@ export default function Home() {
           </div>
         </div>
       </div>
+      <AuthorsSection />
       <Footer />
     </div>
   );
