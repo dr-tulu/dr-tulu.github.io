@@ -144,22 +144,33 @@ const scrollToAuthors = () => {
 
 const Headline = () => (
   <PageHeader className="page-header pb-2 pt-0">
-    <Link
+    {/* <Link
       href={PAPER_URL}
       className="inline-flex items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium"
     >
       <span className="sm:hidden">Check our paper!</span>
       <span className="hidden sm:inline">Check our paper!</span>
       <ArrowRightIcon className="ml-1 h-4 w-4" />
-    </Link>
-    <PageHeaderHeading className="tracking-tight">{TITLE}</PageHeaderHeading>
+    </Link> */}
+    <div className="flex items-center gap-4">
+      <Image
+        src="/logo.png"
+        alt="DR Tulu Logo"
+        width={60}
+        height={60}
+        className="rounded-lg"
+      />
+      <PageHeaderHeading className="tracking-tight">
+        <span style={{ color: '#F0529C' }}>DR Tulu:</span> Reinforcement Learning with Evolving Rubrics for Deep Research
+      </PageHeaderHeading>
+    </div>
     {/* <PageHeaderDescription>
       An advanced AI assistant for long-form deep research with adaptive evaluation rubrics.
     </PageHeaderDescription> */}
     <div className="w-full -mx-4">
       <Separator className="mb-0.25 mt-2" />
     </div>
-    <div className="flex items-center justify-between gap-4 w-full -mx-4 px-4">
+    {/* <div className="flex items-center justify-between gap-4 w-full -mx-4 px-4">
       <div className="flex items-center gap-2">
         <span className="text-sm text-muted-foreground">DR Tulu Authors</span>
         <Button
@@ -209,7 +220,7 @@ const Headline = () => (
           Blogpost
         </Link>
       </div>
-    </div>
+    </div> */}
   </PageHeader>
 );
 
@@ -1209,26 +1220,24 @@ const ChatInterface = ({
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Chat functionality coming soon..."
-                className="min-h-[80px] max-h-[200px] resize-none pr-12 opacity-50"
-                disabled={true}
+                placeholder="Type your message here..."
+                className="min-h-[80px] max-h-[200px] resize-none pr-12"
               />
               <Button
                 type="submit"
                 size="icon"
                 variant="ghost"
-                disabled={true}
                 className="absolute bottom-2 right-2 h-8 w-8 rounded-lg hover:bg-muted"
               >
                 <SendHorizontal className="h-4 w-4" />
               </Button>
             </div>
-            <div className="flex pl-2 mt-2">
+            {/* <div className="flex pl-2 mt-2">
               <p className="text-xs text-muted-foreground/60">
                 Interactive chat coming soon. Currently displaying randomly
                 sampled example research output.
               </p>
-            </div>
+            </div> */}
           </form>
         </div>
       </ResizablePanel>
